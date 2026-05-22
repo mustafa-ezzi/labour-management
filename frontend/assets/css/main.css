@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+
+  /* ── Cards ─────────────────────────────────────────────────
+     Mobile  : glassmorphism on deep-green bg
+     Desktop : clean white card on forest-green bg           */
+
+  .ui-card {
+    @apply rounded-lg border border-white/[0.10] bg-white/[0.07] p-4 backdrop-blur-2xl shadow-xl
+           lg:border-gray-200/80 lg:bg-white lg:shadow-md lg:backdrop-blur-none lg:p-5;
+  }
+
+  .ui-card-hover {
+    @apply ui-card cursor-pointer transition-all duration-150
+           hover:border-white/20 hover:bg-white/[0.11]
+           lg:hover:border-green-300 lg:hover:shadow-lg lg:hover:bg-white;
+  }
+
+  /* ── Typography ──────────────────────────────────────────── */
+
+  /* Page-level headings — always on green bg, always white */
+  .ui-page-title {
+    @apply text-xl font-bold tracking-tight text-white lg:text-2xl;
+  }
+
+  /* Labels — inside cards: dark on desktop */
+  .ui-label {
+    @apply mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.12em]
+           text-white/50
+           lg:text-gray-500;
+  }
+
+  /* Muted text — inside cards: dark on desktop */
+  .ui-muted {
+    @apply text-sm text-white/60 lg:text-gray-500;
+  }
+
+  /* Large stat numbers — inside cards: dark on desktop */
+  .ui-stat-value {
+    @apply text-lg font-bold tabular-nums text-white
+           lg:text-xl lg:text-gray-900;
+  }
+
+  .ui-link {
+    @apply text-sm font-semibold text-green-300 underline-offset-2 hover:text-green-200 hover:underline
+           lg:text-green-700 lg:hover:text-green-600;
+  }
+
+  /* ── Form controls ───────────────────────────────────────── */
+
+  .ui-input {
+    @apply w-full rounded-lg border border-white/[0.14] bg-white/[0.07] px-4 py-3 text-base
+           text-white outline-none backdrop-blur-sm transition-all
+           placeholder:text-white/30
+           focus:border-green-400/60 focus:bg-white/[0.10] focus:ring-2 focus:ring-green-500/25
+           lg:border-gray-300 lg:bg-white lg:text-gray-900
+           lg:placeholder:text-gray-400
+           lg:focus:border-green-600 lg:focus:ring-green-500/20
+           lg:text-sm lg:backdrop-blur-none;
+  }
+
+  .ui-select {
+    @apply ui-input appearance-none bg-[length:1rem] bg-[right_0.75rem_center] bg-no-repeat pr-10;
+  }
+
+  /* Mobile arrow: white; desktop arrow: gray — via separate media queries */
+  @media (max-width: 1023px) {
+    .ui-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.4)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .ui-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    }
+  }
+
+  /* ── Buttons ─────────────────────────────────────────────── */
+
+  .ui-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3
+           text-sm font-semibold tracking-wide transition-all duration-150
+           disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .ui-btn-primary {
+    @apply ui-btn bg-green-600 text-white shadow-lg shadow-green-900/40
+           hover:bg-green-500 active:scale-[0.98] active:bg-green-700
+           lg:shadow-green-700/30;
+  }
+
+  .ui-btn-secondary {
+    @apply ui-btn border border-white/[0.15] bg-white/[0.07] text-white/90
+           backdrop-blur-sm hover:border-white/25 hover:bg-white/[0.12]
+           lg:border-gray-300 lg:bg-white lg:text-gray-700 lg:shadow-sm
+           lg:hover:bg-gray-50 lg:hover:border-gray-400 lg:backdrop-blur-none;
+  }
+
+  .ui-btn-ghost {
+    @apply ui-btn text-white/60 hover:bg-white/[0.07] hover:text-white
+           lg:text-gray-600 lg:hover:bg-gray-100 lg:hover:text-gray-800;
+  }
+
+  .ui-btn-danger {
+    @apply ui-btn border border-red-400/25 text-red-300/90
+           hover:border-red-400/40 hover:bg-red-500/[0.12] hover:text-red-300
+           lg:border-red-200 lg:text-red-600 lg:hover:bg-red-50 lg:hover:border-red-300;
+  }
+
+  /* ── Inside white cards on desktop — override text ────────
+     Targets any text-white used directly in templates inside .ui-card */
+
+  @media (min-width: 1024px) {
+    .ui-card p.text-white,
+    .ui-card span.text-white,
+    .ui-card h1.text-white,
+    .ui-card h2.text-white,
+    .ui-card h3.text-white {
+      color: rgb(17 24 39);
+    }
+
+    .ui-card-hover p.text-white,
+    .ui-card-hover span.text-white,
+    .ui-card-hover h1.text-white,
+    .ui-card-hover h2.text-white,
+    .ui-card-hover h3.text-white {
+      color: rgb(17 24 39);
+    }
+  }
+
+  /* ── Misc ─────────────────────────────────────────────────── */
+
+  .ui-divider {
+    @apply my-4 border-t border-white/[0.07] lg:border-gray-200;
+  }
+}
