@@ -1,5 +1,6 @@
 <template>
   <div>
+    <NuxtLink :to="`/sites/${siteId}/materials`" class="ui-link mb-4 inline-block">← Materials</NuxtLink>
     <UiPageHeader title="Log usage" subtitle="Daily consumption — amounts calculated automatically" />
 
     <div class="lg:grid lg:grid-cols-12 lg:gap-8">
@@ -14,7 +15,28 @@
           <p class="text-2xl font-black tabular-nums text-white lg:text-gray-900">
             {{ fmtMoney(daySummary.total_cost) }}
           </p>
-          <p class="ui-muted mt-1">{{ daySummary.entry_count }} entries for this date</p>
+          <div class="mt-3 grid grid-cols-2 gap-3 border-t border-white/[0.07] pt-3 lg:border-gray-100">
+            <div>
+              <p class="text-[10px] font-semibold uppercase text-white/40 lg:text-gray-400">Paid</p>
+              <p class="text-sm font-bold tabular-nums text-white lg:text-gray-800">
+                {{ fmtMoney(daySummary.total_paid) }}
+              </p>
+            </div>
+            <div>
+              <p class="text-[10px] font-semibold uppercase text-white/40 lg:text-gray-400">Pending</p>
+              <p class="text-sm font-bold tabular-nums text-amber-300 lg:text-amber-600">
+                {{ fmtMoney(daySummary.total_pending) }}
+              </p>
+            </div>
+          </div>
+          <p class="ui-muted mt-2">{{ daySummary.entry_count }} entries for this date</p>
+          <NuxtLink
+            v-if="parseAmount(daySummary.total_pending) > 0"
+            :to="`/sites/${siteId}/materials/pay`"
+            class="ui-btn-secondary mt-3 w-full text-center text-xs"
+          >
+            Pay pending
+          </NuxtLink>
         </UiCard>
 
         <UiCard v-if="materials.length">
@@ -113,6 +135,9 @@
                     × {{ fmtMoney(entry.rate_per_unit) }}
                     = <span class="font-bold text-green-300 lg:text-green-700">{{ fmtMoney(entry.calculated_amount) }}</span>
                   </p>
+                  <p class="mt-1 text-xs text-white/45 lg:text-gray-500">
+                    Due {{ fmtMoney(entry.pending_amount) }}
+                  </p>
                   <p v-if="entry.notes" class="mt-0.5 text-xs text-white/40 lg:text-gray-400">{{ entry.notes }}</p>
                 </div>
                 <button
@@ -144,9 +169,16 @@ type UsageEntry = {
   usage_date: string
   quantity_used: string
   calculated_amount: string
+  amount_paid: string
+  pending_amount: string
   notes: string
 }
-type DaySummary = { total_cost: string; entry_count: number }
+type DaySummary = {
+  total_cost: string
+  total_paid: string
+  total_pending: string
+  entry_count: number
+}
 
 const route = useRoute()
 const api = createApiClient()

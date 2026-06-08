@@ -46,6 +46,8 @@
 </template>
 
 <script setup lang="ts">
+import { hasStoredAuth } from '~/utils/auth-storage'
+
 definePageMeta({ layout: 'default' })
 
 const email = ref('')
@@ -54,6 +56,13 @@ const loading = ref(false)
 const error = ref('')
 const auth = useAuthStore()
 const router = useRouter()
+
+onMounted(() => {
+  auth.hydrateFromStorage()
+  if (auth.isLoggedIn || hasStoredAuth()) {
+    router.replace('/dashboard')
+  }
+})
 
 async function submit() {
   loading.value = true

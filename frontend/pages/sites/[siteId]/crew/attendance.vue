@@ -1,5 +1,8 @@
 <template>
   <div>
+    <NuxtLink :to="`/sites/${siteId}/crew`" class="ui-link mb-4 inline-block">← Workers</NuxtLink>
+    <UiPageHeader title="Attendance" subtitle="Mark present, half day, or absent for the day" />
+
     <div class="lg:grid lg:grid-cols-12 lg:gap-8">
       <div class="space-y-4 lg:col-span-4">
         <UiCard>

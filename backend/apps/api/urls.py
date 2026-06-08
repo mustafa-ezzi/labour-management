@@ -12,7 +12,11 @@ from apps.api.views import (
     RegisterView,
     SiteViewSet,
 )
-from apps.materials.views import MaterialViewSet, MaterialUsageViewSet
+from apps.materials.views import (
+    MaterialPaymentViewSet,
+    MaterialUsageViewSet,
+    MaterialViewSet,
+)
 
 router = DefaultRouter()
 router.register("sites", SiteViewSet, basename="site")
@@ -21,6 +25,7 @@ router.register("attendance", AttendanceViewSet, basename="attendance")
 router.register("labour-payments", LabourPaymentViewSet, basename="labour-payment")
 router.register("materials", MaterialViewSet, basename="material")
 router.register("material-usage", MaterialUsageViewSet, basename="material-usage")
+router.register("material-payments", MaterialPaymentViewSet, basename="material-payment")
 
 urlpatterns = [
     path("auth/register/", RegisterView.as_view(), name="auth-register"),

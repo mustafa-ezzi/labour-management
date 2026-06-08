@@ -1,23 +1,20 @@
 <template>
   <div>
-    <header class="mb-4 border-b border-white/10 pb-3 lg:mb-5">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div class="min-w-0">
-          <NuxtLink to="/sites" class="ui-link text-xs">← All sites</NuxtLink>
-          <h1 class="ui-page-title mt-1 truncate">{{ heading }}</h1>
-          <p class="ui-muted mt-0.5 text-xs">All crew, attendance, pay, and materials below are for this site only.</p>
-        </div>
-        <nav class="flex flex-wrap gap-2 shrink-0" aria-label="Site sections">
-          <NuxtLink
-            v-for="l in siteSectionLinks"
-            :key="l.to"
-            :to="l.to"
-            class="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white/75 transition-colors hover:border-green-400/40 hover:bg-white/5 lg:border-gray-300 lg:text-gray-700 lg:hover:bg-gray-100"
-            active-class="!border-green-500/50 !bg-green-500/10 !text-green-200 lg:!border-green-400 lg:!bg-green-50 lg:!text-green-800"
-          >
-            {{ l.label }}
-          </NuxtLink>
-        </nav>
+    <header class="mb-5 flex items-center gap-3 border-b border-white/10 pb-3 lg:mb-6">
+      <NuxtLink
+        to="/sites"
+        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/55 transition-colors hover:bg-white/[0.07] hover:text-white lg:text-gray-500 lg:hover:bg-gray-100 lg:hover:text-gray-800"
+        aria-label="All sites"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </NuxtLink>
+      <div class="min-w-0">
+        <p class="text-[10px] font-semibold uppercase tracking-widest text-white/40 lg:text-gray-400">Site</p>
+        <h1 class="truncate text-lg font-bold leading-tight text-white lg:text-xl lg:text-gray-900">
+          {{ heading }}
+        </h1>
       </div>
     </header>
     <NuxtPage />
@@ -33,19 +30,8 @@ const api = createApiClient()
 const siteId = computed(() => String(route.params.siteId || ''))
 const heading = ref('Site')
 
-const siteSectionLinks = computed(() => {
-  const id = siteId.value
-  return [
-    { to: `/sites/${id}`, label: 'Overview' },
-    { to: `/sites/${id}/crew`, label: 'Crew' },
-    { to: `/sites/${id}/materials`, label: 'Materials' },
-  ]
-})
-
 async function loadSiteName() {
-  if (!siteId.value) {
-    return
-  }
+  if (!siteId.value) return
   persistSiteId(siteId.value)
   try {
     const { data } = await api.get<{ name: string }>(`/sites/${siteId.value}/`)

@@ -1,7 +1,7 @@
 <template>
   <div>
-    <NuxtLink :to="`/sites/${siteId}/crew`" class="ui-link mb-4 inline-block">← Workers</NuxtLink>
-    <UiPageHeader title="Pay workers" subtitle="Settle pending wages for selected workers">
+    <NuxtLink :to="`/sites/${siteId}/materials`" class="ui-link mb-4 inline-block">← Materials</NuxtLink>
+    <UiPageHeader title="Pay materials" subtitle="Settle pending costs from usage logs">
       <template v-if="rows.length" #action>
         <button
           type="button"
@@ -21,7 +21,7 @@
         </div>
         <div>
           <label class="ui-label" for="notes">Notes (optional)</label>
-          <input id="notes" v-model="notes" class="ui-input" placeholder="e.g. Weekly wages" />
+          <input id="notes" v-model="notes" class="ui-input" placeholder="e.g. Supplier invoice" />
         </div>
       </UiCard>
 
@@ -32,7 +32,7 @@
         <p class="ui-label !mb-3">Payment summary</p>
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div>
-            <p class="text-xs text-white/40 lg:text-gray-500">Workers selected</p>
+            <p class="text-xs text-white/40 lg:text-gray-500">Materials selected</p>
             <p class="ui-stat-value !text-base lg:!text-gray-900">{{ selectedCount }}</p>
           </div>
           <div>
@@ -45,7 +45,7 @@
           </div>
         </div>
         <p v-if="totalPaying > totalPayable" class="mt-2 text-sm text-red-400">
-          Paying more than total outstanding for selected workers.
+          Paying more than total outstanding for selected materials.
         </p>
         <button
           type="button"
@@ -53,14 +53,14 @@
           :disabled="submitting || selectedCount === 0 || totalPaying <= 0 || totalPaying > totalPayable"
           @click="submitPayments"
         >
-          {{ submitting ? 'Processing…' : `Pay ${selectedCount} worker${selectedCount === 1 ? '' : 's'}` }}
+          {{ submitting ? 'Processing…' : `Pay ${selectedCount} material${selectedCount === 1 ? '' : 's'}` }}
         </button>
         <p v-if="formErr" class="mt-2 text-sm text-red-400">{{ formErr }}</p>
         <p v-if="successMsg" class="mt-2 text-sm text-green-400">{{ successMsg }}</p>
       </div>
     </div>
 
-    <p v-if="loading" class="ui-muted">Loading workers…</p>
+    <p v-if="loading" class="ui-muted">Loading materials…</p>
     <p v-else-if="loadErr" class="text-red-400">{{ loadErr }}</p>
     <template v-else>
       <div
@@ -82,7 +82,7 @@
       <ul class="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
         <li
           v-for="row in rows"
-          :key="row.labour.id"
+          :key="row.material.id"
           class="flex flex-col gap-3 rounded-lg border px-4 py-3 sm:flex-row sm:items-center"
           :class="
             row.selected
@@ -99,17 +99,17 @@
               @change="onRowSelect(row)"
             />
             <div class="min-w-0">
-              <p class="truncate font-medium text-white lg:text-gray-900">{{ row.labour.name }}</p>
+              <p class="truncate font-medium text-white lg:text-gray-900">{{ row.material.name }}</p>
               <p class="text-xs text-white/40 lg:text-gray-500">
-                Pending
+                Logged {{ formatAmount(row.material.total_amount_spent) }} · Pending
                 <span class="font-semibold text-amber-300/90 lg:text-amber-600">{{ formatAmount(row.pendingNum) }}</span>
               </p>
             </div>
           </label>
           <div class="flex items-center gap-2 sm:w-40">
-            <label class="sr-only" :for="`amt-${row.labour.id}`">Amount for {{ row.labour.name }}</label>
+            <label class="sr-only" :for="`amt-${row.material.id}`">Amount for {{ row.material.name }}</label>
             <input
-              :id="`amt-${row.labour.id}`"
+              :id="`amt-${row.material.id}`"
               v-model="row.amount"
               type="number"
               min="0"
@@ -124,25 +124,28 @@
         </li>
       </ul>
       <UiCard v-if="!rows.length" class="mt-4 text-center">
-        <p class="text-white/60 lg:text-gray-600">No active workers on this site.</p>
+        <p class="text-white/60 lg:text-gray-600">No materials on this site yet.</p>
+        <NuxtLink :to="`/sites/${siteId}/materials/new`" class="ui-btn-primary mt-4 inline-flex">
+          Add material
+        </NuxtLink>
       </UiCard>
       <UiCard v-else-if="!rowsWithBalance.length" class="mt-4 text-center">
-        <p class="text-white/60 lg:text-gray-600">Everyone is paid up on this site.</p>
+        <p class="text-white/60 lg:text-gray-600">All material costs are paid up.</p>
       </UiCard>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-type LabourRow = {
+type MaterialRow = {
   id: string
   name: string
-  daily_wage: string
-  pending_wage: string
+  total_amount_spent: string
+  pending_amount: string
 }
 
 type PayRow = {
-  labour: LabourRow
+  material: MaterialRow
   selected: boolean
   amount: string
   pendingNum: number
@@ -206,9 +209,9 @@ function fillSelectedFull() {
 }
 
 function preselectFromQuery() {
-  const q = route.query.labour_id
+  const q = route.query.material_id
   if (typeof q !== 'string' || !q) return
-  const row = rows.value.find((r) => r.labour.id === q)
+  const row = rows.value.find((r) => r.material.id === q)
   if (row && row.pendingNum > 0) {
     row.selected = true
     row.amount = String(row.pendingNum)
@@ -216,7 +219,7 @@ function preselectFromQuery() {
   }
 }
 
-async function loadWorkers() {
+async function loadMaterials() {
   rows.value = []
   successMsg.value = ''
   formErr.value = ''
@@ -225,19 +228,17 @@ async function loadWorkers() {
   loading.value = true
   loadErr.value = ''
   try {
-    const { data } = await api.get('/labours/', {
-      params: { site_id: siteId.value, status: 'active' },
-    })
-    const labours = unwrapResults<LabourRow>(data)
-    rows.value = labours.map((l) => ({
-      labour: l,
+    const { data } = await api.get('/materials/', { params: { site_id: siteId.value } })
+    const list = unwrapResults<MaterialRow>(data)
+    rows.value = list.map((m) => ({
+      material: m,
       selected: false,
       amount: '',
-      pendingNum: parseAmount(l.pending_wage),
+      pendingNum: parseAmount(m.pending_amount),
     }))
     preselectFromQuery()
   } catch {
-    loadErr.value = 'Could not load workers.'
+    loadErr.value = 'Could not load materials.'
   } finally {
     loading.value = false
   }
@@ -246,7 +247,7 @@ async function loadWorkers() {
 async function submitPayments() {
   const toPay = selectedRows.value.filter((r) => parseAmount(r.amount) > 0)
   if (!toPay.length) {
-    formErr.value = 'Enter an amount for at least one selected worker.'
+    formErr.value = 'Enter an amount for at least one selected material.'
     return
   }
   submitting.value = true
@@ -254,18 +255,18 @@ async function submitPayments() {
   successMsg.value = ''
   try {
     const { data } = await api.post<{ created: number; total_paid: string }>(
-      '/labour-payments/bulk-pay/',
+      '/material-payments/bulk-pay/',
       {
         payment_date: payDate.value,
         notes: notes.value,
         payments: toPay.map((r) => ({
-          labour_id: r.labour.id,
+          material_id: r.material.id,
           amount_paid: r.amount,
         })),
       },
     )
-    successMsg.value = `Paid ${data.created} worker(s) — total ${formatAmount(data.total_paid)}.`
-    await loadWorkers()
+    successMsg.value = `Paid ${data.created} material(s) — total ${formatAmount(data.total_paid)}.`
+    await loadMaterials()
   } catch (e: unknown) {
     const ax = e as { response?: { data?: { payments?: { error: string }[]; detail?: string } } }
     const lines = ax.response?.data?.payments
@@ -279,10 +280,10 @@ async function submitPayments() {
   }
 }
 
-watch(siteId, loadWorkers, { immediate: true })
+watch(siteId, loadMaterials, { immediate: true })
 
 watch(
-  () => route.query.labour_id,
+  () => route.query.material_id,
   () => {
     if (rows.value.length) {
       preselectFromQuery()

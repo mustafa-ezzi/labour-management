@@ -14,15 +14,23 @@
             {{ material.unit_of_measure }} · {{ fmtMoney(material.rate_per_unit) }} per {{ material.unit_of_measure }}
           </p>
         </div>
-        <NuxtLink
-          :to="`/sites/${route.params.siteId}/materials/usage?material_id=${material.id}`"
-          class="ui-btn-primary shrink-0 py-2 text-xs"
-        >
-          + Log usage
-        </NuxtLink>
+        <div class="flex shrink-0 flex-wrap gap-2">
+          <NuxtLink
+            :to="`/sites/${route.params.siteId}/materials/pay?material_id=${material.id}`"
+            class="ui-btn-secondary py-2 text-xs"
+          >
+            Pay balance
+          </NuxtLink>
+          <NuxtLink
+            :to="`/sites/${route.params.siteId}/materials/usage?material_id=${material.id}`"
+            class="ui-btn-primary py-2 text-xs"
+          >
+            + Log usage
+          </NuxtLink>
+        </div>
       </div>
 
-      <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <UiCard>
           <p class="ui-label !mb-0">Total qty</p>
           <p class="ui-stat-value mt-1 lg:!text-gray-900">
@@ -34,6 +42,18 @@
           <p class="ui-label !mb-0">Total cost</p>
           <p class="mt-1 text-lg font-bold tabular-nums text-green-300 lg:text-xl lg:text-green-700">
             {{ fmtMoney(material.total_amount_spent) }}
+          </p>
+        </UiCard>
+        <UiCard>
+          <p class="ui-label !mb-0">Paid</p>
+          <p class="mt-1 text-lg font-bold tabular-nums text-white lg:text-gray-900">
+            {{ fmtMoney(material.total_amount_paid) }}
+          </p>
+        </UiCard>
+        <UiCard>
+          <p class="ui-label !mb-0">Pending</p>
+          <p class="mt-1 text-lg font-bold tabular-nums text-amber-300 lg:text-amber-600">
+            {{ fmtMoney(material.pending_amount) }}
           </p>
         </UiCard>
         <UiCard>
@@ -104,6 +124,15 @@
                         =
                         <span class="font-bold text-green-300 lg:text-green-700">{{ fmtMoney(entry.calculated_amount) }}</span>
                       </p>
+                      <p class="mt-1 text-xs text-white/45 lg:text-gray-500">
+                        Paid {{ fmtMoney(entry.amount_paid) }} · Due
+                        <span
+                          class="font-semibold"
+                          :class="parseAmount(entry.pending_amount) > 0 ? 'text-amber-300 lg:text-amber-600' : 'text-green-400 lg:text-green-700'"
+                        >
+                          {{ fmtMoney(entry.pending_amount) }}
+                        </span>
+                      </p>
                     </div>
                     <p v-if="entry.notes" class="mt-0.5 text-xs text-white/40 lg:text-gray-400">{{ entry.notes }}</p>
                   </div>
@@ -123,12 +152,37 @@
                 <p class="ui-muted mt-0.5">{{ fmtQty(totalQty) }} {{ material.unit_of_measure }} total</p>
               </div>
             </div>
+
             <UiCard v-else class="text-center">
               <p class="text-white/50 lg:text-gray-500">No usage entries yet</p>
               <NuxtLink :to="`/sites/${route.params.siteId}/materials/usage?material_id=${material.id}`" class="ui-btn-primary mt-4 inline-flex">
                 Log first usage
               </NuxtLink>
             </UiCard>
+
+            <div v-if="payments.length" class="mt-8">
+              <p class="mb-3 text-sm font-semibold text-white/70 lg:text-gray-700">Payment history</p>
+              <div class="space-y-2">
+                <div
+                  v-for="p in payments"
+                  :key="p.id"
+                  class="rounded-lg border border-white/[0.07] bg-white/[0.04] px-4 py-3 lg:border-gray-200 lg:bg-white lg:shadow-sm"
+                >
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <p class="text-sm font-semibold text-white lg:text-gray-900">{{ p.payment_date }}</p>
+                      <p class="text-xs text-white/45 lg:text-gray-500">
+                        {{ p.payment_type }} · balance after {{ fmtMoney(p.remaining_amount) }}
+                      </p>
+                      <p v-if="p.notes" class="mt-0.5 text-xs text-white/40 lg:text-gray-400">{{ p.notes }}</p>
+                    </div>
+                    <p class="text-sm font-bold tabular-nums text-green-300 lg:text-green-700">
+                      {{ fmtMoney(p.amount_paid) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </template>
         </div>
       </div>
@@ -146,6 +200,8 @@ type MaterialDetail = {
   notes: string
   total_quantity_used: string
   total_amount_spent: string
+  total_amount_paid: string
+  pending_amount: string
   latest_usage_date: string | null
   usage_count: number
   average_daily_usage: string
@@ -155,6 +211,16 @@ type UsageEntry = {
   usage_date: string
   quantity_used: string
   calculated_amount: string
+  amount_paid: string
+  pending_amount: string
+  notes: string
+}
+type MaterialPaymentRow = {
+  id: string
+  payment_date: string
+  amount_paid: string
+  payment_type: string
+  remaining_amount: string
   notes: string
 }
 
@@ -167,6 +233,7 @@ const siteIdStr = computed(() => String(route.params.siteId || ''))
 
 const material = ref<MaterialDetail | null>(null)
 const usageEntries = ref<UsageEntry[]>([])
+const payments = ref<MaterialPaymentRow[]>([])
 const loading = ref(true)
 const loadErr = ref('')
 const loadingHistory = ref(false)
@@ -217,10 +284,14 @@ async function loadMaterial() {
 async function loadHistory() {
   loadingHistory.value = true
   try {
-    const { data } = await api.get('/material-usage/', {
-      params: { material_id: materialId.value },
-    })
-    usageEntries.value = Array.isArray(data) ? data : (data.results ?? [])
+    const [usageRes, payRes] = await Promise.all([
+      api.get('/material-usage/', { params: { material_id: materialId.value } }),
+      api.get('/material-payments/', { params: { material_id: materialId.value } }),
+    ])
+    usageEntries.value = Array.isArray(usageRes.data)
+      ? usageRes.data
+      : (usageRes.data.results ?? [])
+    payments.value = Array.isArray(payRes.data) ? payRes.data : (payRes.data.results ?? [])
   } finally {
     loadingHistory.value = false
   }

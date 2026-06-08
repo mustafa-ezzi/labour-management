@@ -40,8 +40,12 @@
           v-for="item in items"
           :key="item.to"
           :to="item.to"
-          class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/55 transition-all duration-150 hover:bg-white/[0.07] hover:text-white"
-          active-class="!bg-green-700 !text-white !font-semibold"
+          class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150"
+          :class="
+            isActive(item)
+              ? 'bg-green-700 text-white font-semibold'
+              : 'text-white/55 hover:bg-white/[0.07] hover:text-white'
+          "
         >
           <AppNavIcon :name="item.icon" class="h-4 w-4 shrink-0" />
           {{ item.label }}
@@ -127,8 +131,8 @@
             v-for="item in items"
             :key="item.to"
             :to="item.to"
-            class="flex flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-white/35 transition-all"
-            active-class="!text-green-400 !bg-green-500/10"
+            class="flex flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-[10px] font-semibold uppercase tracking-wide transition-all"
+            :class="isActive(item) ? 'text-green-400 bg-green-500/10' : 'text-white/35'"
           >
             <AppNavIcon :name="item.icon" class="h-5 w-5" />
             {{ item.shortLabel }}
@@ -140,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-const { items, bottomNavClass } = useAppNav()
+const { items, bottomNavClass, isActive } = useAppNav()
 const auth = useAuthStore()
 const router = useRouter()
 

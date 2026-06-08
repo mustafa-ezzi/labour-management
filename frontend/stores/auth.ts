@@ -1,11 +1,9 @@
 import { defineStore } from 'pinia'
-
-const STORAGE_KEY = 'lms_auth'
-
-type Stored = {
-  access: string
-  refresh: string
-}
+import {
+  clearAuthStorage,
+  readAuthFromStorage,
+  writeAuthToStorage,
+} from '~/utils/auth-storage'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -17,30 +15,24 @@ export const useAuthStore = defineStore('auth', {
   },
   actions: {
     hydrateFromStorage() {
-      if (!import.meta.client) return
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY)
-        if (!raw) return
-        const data = JSON.parse(raw) as Stored
-        this.accessToken = data.access
-        this.refreshToken = data.refresh
-      } catch {
-        this.clear()
+      const data = readAuthFromStorage()
+      if (!data) {
+        this.accessToken = null
+        this.refreshToken = null
+        return
       }
+      this.accessToken = data.access
+      this.refreshToken = data.refresh
     },
     setTokens(access: string, refresh: string) {
       this.accessToken = access
       this.refreshToken = refresh
-      if (import.meta.client) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ access, refresh }))
-      }
+      writeAuthToStorage(access, refresh)
     },
     clear() {
       this.accessToken = null
       this.refreshToken = null
-      if (import.meta.client) {
-        localStorage.removeItem(STORAGE_KEY)
-      }
+      clearAuthStorage()
     },
   },
 })

@@ -60,6 +60,36 @@
     />
   </svg>
   <svg
+    v-else-if="name === 'attendance'"
+    :class="iconClass"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    stroke-width="1.75"
+    aria-hidden="true"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M9 12l2 2 4-4M5 7h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2zM8 5v4M16 5v4"
+    />
+  </svg>
+  <svg
+    v-else-if="name === 'log'"
+    :class="iconClass"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    stroke-width="1.75"
+    aria-hidden="true"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M12 4v16m8-8H4"
+    />
+  </svg>
+  <svg
     v-else-if="name === 'materials'"
     :class="iconClass"
     fill="none"
