@@ -1,38 +1,16 @@
-"""Production settings — set DJANGO_SECRET_KEY, DATABASE_URL, ALLOWED_HOSTS in the environment."""
+"""Production settings — set DJANGO_SECRET_KEY, database vars, ALLOWED_HOSTS in Railway."""
 import os
 
 from .base import *  # noqa: F403
+from .database import get_database_config
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "").lower() in ("1", "true", "yes")
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "").split(",") if h.strip()]
 
 if not ALLOWED_HOSTS:
-    raise ValueError("ALLOWED_HOSTS must be set in production")
+    raise ValueError("ALLOWED_HOSTS must be set in production (comma-separated domains).")
 
-database_url = os.environ.get("DATABASE_URL")
-if not database_url:
-    raise ValueError("DATABASE_URL must be set in production")
-
-import re
-
-m = re.match(
-    r"postgres(?:ql)?://([^:]+):([^@]+)@([^:/]+)(?::(\d+))?/(.+)",
-    database_url,
-)
-if not m:
-    raise ValueError("DATABASE_URL must be a PostgreSQL URL")
-
-user, password, host, port, name = m.groups()
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": name.split("?")[0],
-        "USER": user,
-        "PASSWORD": password,
-        "HOST": host,
-        "PORT": port or "5432",
-    }
-}
+DATABASES = get_database_config(required=True)
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = True
