@@ -71,7 +71,7 @@ async function submit() {
   error.value = ''
   try {
     const api = createApiClient()
-    const { data } = await api.post('/auth/register', {
+    const { data } = await api.post('/auth/register/', {
       company_name: companyName.value,
       email: email.value,
       password: password.value,
