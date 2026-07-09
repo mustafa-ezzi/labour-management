@@ -307,3 +307,13 @@ class LabourPaymentViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class HealthView(APIView):
+    """Lightweight health check for Railway / uptime monitors."""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        return Response({"status": "ok"})
+
