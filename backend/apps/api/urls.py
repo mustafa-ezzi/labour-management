@@ -28,7 +28,7 @@ router.register("material-usage", MaterialUsageViewSet, basename="material-usage
 router.register("material-payments", MaterialPaymentViewSet, basename="material-payment")
 
 urlpatterns = [
-    path("auth/register/", RegisterView.as_view(), name="auth-register"),
+    path("auth/register", RegisterView.as_view(), name="auth-register"),
     path("auth/login/", LabourTokenObtainPairView.as_view(), name="auth-login"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="auth-refresh"),
     path("me/", MeView.as_view(), name="me"),
