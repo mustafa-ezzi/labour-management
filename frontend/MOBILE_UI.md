@@ -227,6 +227,7 @@ Tap row → expand → "Balance to date: 1,850 · Last paid: Jul 9 – 1500 · N
 
 ---
 
+
 ## Screen map (updated — fewer redirects)
 
 ```

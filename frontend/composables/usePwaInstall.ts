@@ -18,6 +18,11 @@ function detectIos(): boolean {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent)
 }
 
+function detectAndroid(): boolean {
+  if (!import.meta.client) return false
+  return /android/i.test(window.navigator.userAgent)
+}
+
 function detectMobile(): boolean {
   if (!import.meta.client) return false
   return (
@@ -31,9 +36,11 @@ export function usePwaInstall() {
   const dismissed = useState('pwa-install-dismissed', () => false)
   const isInstalled = useState('pwa-is-installed', () => false)
   const isIos = useState('pwa-is-ios', () => false)
+  const isAndroid = useState('pwa-is-android', () => false)
   const isMobile = useState('pwa-is-mobile', () => false)
   const modalOpen = useState('pwa-modal-open', () => false)
   const installing = useState('pwa-installing', () => false)
+  const installReady = useState('pwa-install-ready', () => false)
 
   const canNativeInstall = computed(() => !!deferredPrompt.value)
   const showDownloadPopup = computed(() => {
@@ -46,26 +53,39 @@ export function usePwaInstall() {
   /** @deprecated use showDownloadPopup */
   const showPrompt = showDownloadPopup
 
+  function onInstallPrompt(event: Event) {
+    event.preventDefault()
+    deferredPrompt.value = event as BeforeInstallPromptEvent
+    installReady.value = true
+    if (!isInstalled.value && !dismissed.value) {
+      openModal()
+    }
+  }
+
   function init() {
     if (!import.meta.client || (window as Window & { __pwaInit?: boolean }).__pwaInit) return
     ;(window as Window & { __pwaInit?: boolean }).__pwaInit = true
 
     isInstalled.value = detectStandalone()
     isIos.value = detectIos() && !isInstalled.value
+    isAndroid.value = detectAndroid() && !isInstalled.value
     isMobile.value = detectMobile() && !isInstalled.value
     dismissed.value = localStorage.getItem(DISMISS_KEY) === '1'
 
-    window.addEventListener('beforeinstallprompt', (event) => {
-      event.preventDefault()
-      deferredPrompt.value = event as BeforeInstallPromptEvent
-    })
+    window.addEventListener('beforeinstallprompt', onInstallPrompt)
 
     window.addEventListener('appinstalled', () => {
       isInstalled.value = true
       deferredPrompt.value = null
+      installReady.value = false
       modalOpen.value = false
       installing.value = false
     })
+
+    // iOS has no native install API — show the popup with Add to Home Screen steps.
+    if (isIos.value && !dismissed.value) {
+      window.setTimeout(() => openModal(), 1000)
+    }
   }
 
   function openModal() {
@@ -76,27 +96,30 @@ export function usePwaInstall() {
     modalOpen.value = false
   }
 
-  async function install(): Promise<boolean> {
-    if (isIos.value) {
-      return false
-    }
-    if (!deferredPrompt.value) {
-      return false
-    }
+  /** Trigger the browser's native install dialog (Android / desktop Chrome). */
+  function install(): Promise<boolean> {
+    const event = deferredPrompt.value
+    if (!event) return Promise.resolve(false)
+
     installing.value = true
-    try {
-      await deferredPrompt.value.prompt()
-      const { outcome } = await deferredPrompt.value.userChoice
-      deferredPrompt.value = null
-      if (outcome === 'accepted') {
-        isInstalled.value = true
-        modalOpen.value = false
-        return true
-      }
-      return false
-    } finally {
-      installing.value = false
-    }
+    // prompt() must be called synchronously from the user click handler.
+    event.prompt()
+
+    return event.userChoice
+      .then(({ outcome }) => {
+        deferredPrompt.value = null
+        installReady.value = false
+        if (outcome === 'accepted') {
+          isInstalled.value = true
+          modalOpen.value = false
+          return true
+        }
+        return false
+      })
+      .catch(() => false)
+      .finally(() => {
+        installing.value = false
+      })
   }
 
   function dismiss() {
@@ -113,9 +136,11 @@ export function usePwaInstall() {
     showPrompt,
     isInstalled,
     isIos,
+    isAndroid,
     isMobile,
     modalOpen,
     installing,
+    installReady,
     init,
     openModal,
     closeModal,
