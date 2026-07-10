@@ -23,10 +23,16 @@
             Daily wage
           </NuxtLink>
           <NuxtLink
+            :to="`/sites/${route.params.siteId}/crew/history?labour_id=${labour.id}`"
+            class="ui-btn-secondary py-2 text-xs"
+          >
+            Attendance
+          </NuxtLink>
+          <NuxtLink
             :to="`/sites/${route.params.siteId}/crew/${labour.id}/payments`"
             class="ui-btn-secondary py-2 text-xs"
           >
-            History
+            Payments
           </NuxtLink>
         </div>
       </div>

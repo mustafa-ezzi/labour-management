@@ -346,6 +346,71 @@ class AttendanceViewSet(viewsets.ModelViewSet):
 
         return Response({"saved": len(results), "results": results}, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=["get"], url_path="worker-history")
+    def worker_history(self, request):
+        """Present-day calendar for one worker in a given month."""
+        import calendar
+        from datetime import date
+
+        site_id = request.query_params.get("site_id")
+        labour_id = request.query_params.get("labour_id")
+        year = request.query_params.get("year")
+        month = request.query_params.get("month")
+        if not site_id or not labour_id or not year or not month:
+            return Response(
+                {"detail": "Query parameters site_id, labour_id, year, and month are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            year_i = int(year)
+            month_i = int(month)
+            if month_i < 1 or month_i > 12:
+                raise ValueError
+        except ValueError:
+            return Response({"detail": "Invalid year or month."}, status=status.HTTP_400_BAD_REQUEST)
+
+        allowed = user_company_ids(request.user)
+        site = Site.objects.filter(pk=site_id, company_id__in=allowed).first()
+        if not site:
+            return Response({"detail": "Site not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        labour = Labour.objects.filter(
+            pk=labour_id, site_id=site_id, company_id=site.company_id
+        ).first()
+        if not labour:
+            return Response({"detail": "Worker not found on this site."}, status=status.HTTP_404_NOT_FOUND)
+
+        last_day = calendar.monthrange(year_i, month_i)[1]
+        start = date(year_i, month_i, 1)
+        end = date(year_i, month_i, last_day)
+
+        attendances = Attendance.objects.filter(
+            company_id=site.company_id,
+            site_id=site_id,
+            labour_id=labour_id,
+            date__gte=start,
+            date__lte=end,
+            present=True,
+        ).order_by("date")
+
+        days = [
+            {"date": str(att.date), "wage_rate": str(att.wage_rate)}
+            for att in attendances
+        ]
+
+        return Response(
+            {
+                "site_id": str(site_id),
+                "labour_id": str(labour_id),
+                "labour_name": labour.name,
+                "year": year_i,
+                "month": month_i,
+                "present_count": len(days),
+                "days": days,
+            }
+        )
+
 
 class LabourPaymentViewSet(viewsets.ModelViewSet):
     serializer_class = LabourPaymentSerializer

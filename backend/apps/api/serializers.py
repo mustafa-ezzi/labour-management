@@ -62,6 +62,7 @@ class LabourTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class SiteSerializer(serializers.ModelSerializer):
     company_id = serializers.UUIDField(read_only=True)
+    to_date = serializers.DateField(required=False, allow_null=True)
 
     class Meta:
         model = Site
@@ -85,6 +86,16 @@ class SiteSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
+
+    def validate(self, attrs):
+        from_date = attrs.get("from_date")
+        to_date = attrs.get("to_date")
+        if self.instance:
+            from_date = from_date or self.instance.from_date
+            to_date = to_date if "to_date" in attrs else self.instance.to_date
+        if from_date and to_date and to_date < from_date:
+            raise serializers.ValidationError({"to_date": "End date cannot be before start date."})
+        return attrs
 
 
 class LabourSerializer(serializers.ModelSerializer):

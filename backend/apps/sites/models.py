@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -14,8 +15,8 @@ class Site(models.Model):
     )
     name = models.CharField(max_length=255)
     location = models.CharField(max_length=512, blank=True)
-    from_date = models.DateField()
-    to_date = models.DateField()
+    from_date = models.DateField(help_text="Site starting date.")
+    to_date = models.DateField(null=True, blank=True)
     total_work_days = models.PositiveIntegerField(default=0, editable=False)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -40,7 +41,8 @@ class Site(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()
-        if self.from_date and self.to_date:
-            delta = (self.to_date - self.from_date).days + 1
-            self.total_work_days = max(0, delta)
+        if self.from_date:
+            end = self.to_date or date.today()
+            delta = (end - self.from_date).days + 1
+            self.total_work_days = max(1, delta)
         super().save(*args, **kwargs)

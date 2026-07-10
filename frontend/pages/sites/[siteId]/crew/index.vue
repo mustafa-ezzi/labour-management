@@ -6,26 +6,36 @@
       </template>
     </UiPageHeader>
 
-    <NuxtLink
-      :to="`/sites/${siteId}/crew/wages`"
-      class="mb-5 flex items-center gap-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 transition-all hover:border-violet-300 hover:bg-violet-100"
-    >
-      <span
-        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-600 text-white shadow-md"
-        style="box-shadow: 0 2px 12px rgba(124,58,237,0.4)"
+    <div class="mb-5 grid grid-cols-2 gap-3">
+      <NuxtLink
+        :to="`/sites/${siteId}/crew/wages`"
+        class="flex items-center gap-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 transition-all hover:border-violet-300 hover:bg-violet-100"
       >
-        <AppNavIcon name="wages" class="h-5 w-5" />
-      </span>
-      <div class="min-w-0 flex-1">
-        <p class="text-sm font-semibold text-gray-900">Daily Wages</p>
-        <p class="text-[11px] text-gray-500">Attendance + pay for today, one page</p>
-      </div>
-      <AppNavIcon name="chevron-down" class="h-4 w-4 shrink-0 -rotate-90 text-gray-400" />
-    </NuxtLink>
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-600 text-white shadow-md">
+          <AppNavIcon name="wages" class="h-5 w-5" />
+        </span>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-semibold text-gray-900">Daily Wages</p>
+          <p class="text-[11px] text-gray-500">Attendance + pay</p>
+        </div>
+      </NuxtLink>
+      <NuxtLink
+        :to="`/sites/${siteId}/crew/history`"
+        class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-all hover:border-violet-200 hover:bg-violet-50/50"
+      >
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-700">
+          <AppNavIcon name="attendance" class="h-5 w-5" />
+        </span>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-semibold text-gray-900">History</p>
+          <p class="text-[11px] text-gray-500">Present days calendar</p>
+        </div>
+      </NuxtLink>
+    </div>
 
     <p v-if="loading" class="ui-muted">Loading…</p>
     <p v-else-if="error" class="text-red-600">{{ error }}</p>
-    <ul v-else-if="labours.length" class="divide-y divide-gray-100 overflow-hidden rounded-xl border divide-y divide-gray-100 border border-gray-200 bg-white">
+    <ul v-else-if="labours.length" class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white">
       <li v-for="l in labours" :key="l.id">
         <NuxtLink
           :to="`/sites/${siteId}/crew/${l.id}`"

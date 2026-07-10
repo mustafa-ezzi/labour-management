@@ -26,7 +26,7 @@
           <div class="min-w-0 flex-1">
             <p class="font-semibold text-gray-900">{{ s.name }}</p>
             <p v-if="s.location" class="ui-muted mt-0.5 truncate text-xs">{{ s.location }}</p>
-            <p class="mt-0.5 text-xs text-gray-400">{{ s.from_date }} → {{ s.to_date }}</p>
+            <p class="mt-0.5 text-xs text-gray-400">Started {{ s.from_date }}</p>
           </div>
           <div class="shrink-0 text-right">
             <p class="text-[10px] uppercase tracking-wide text-gray-400">Days</p>
@@ -50,7 +50,7 @@ type Site = {
   id: string
   name: string
   from_date: string
-  to_date: string
+  to_date: string | null
   location: string
   total_work_days: number
 }
