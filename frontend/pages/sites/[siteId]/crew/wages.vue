@@ -44,37 +44,63 @@
           :key="row.labour_id"
           class="overflow-hidden rounded-xl border transition-colors"
           :class="
-            row.present
-              ? 'border-violet-200 bg-violet-50/50'
-              : 'border-gray-200 bg-white'
+            row.expanded
+              ? 'border-violet-300 bg-white shadow-sm'
+              : row.present
+                ? 'border-violet-200 bg-violet-50/40'
+                : 'border-gray-200 bg-white'
           "
         >
-          <div class="flex flex-wrap items-center gap-3 px-3 py-3 sm:gap-4">
-            <button
-              type="button"
-              class="flex shrink-0 items-center gap-3"
-              @click="toggleExpand(row)"
+          <!-- Collapsed header: name + rate only -->
+          <button
+            type="button"
+            class="flex w-full items-center gap-3 px-4 py-3.5 text-left"
+            @click="toggleExpand(row)"
+          >
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold uppercase"
+              :class="
+                row.present
+                  ? 'bg-violet-600 text-white shadow-sm'
+                  : 'border border-gray-300 text-gray-400'
+              "
             >
-              <span
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold uppercase transition-colors"
-                :class="
-                  row.present
-                    ? 'bg-violet-600 text-white shadow-md shadow-violet-700/30'
-                    : 'border border-gray-300 text-gray-400'
-                "
-              >
-                {{ row.name.slice(0, 1) }}
-              </span>
-            </button>
+              {{ row.name.slice(0, 1) }}
+            </span>
 
-            <div class="min-w-0 flex-1 cursor-pointer" @click="toggleExpand(row)">
-              <p class="truncate text-sm font-semibold text-gray-900">{{ row.name }}</p>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-gray-900">{{ row.name }}</p>
               <p class="text-xs text-gray-500">Rate {{ row.daily_wage }}/day</p>
+              <p v-if="!row.expanded && (row.present || parseAmount(row.paid) > 0)" class="mt-0.5 text-xs text-gray-400">
+                Wage {{ formatAmount(row.wage) }} · Paid {{ formatAmount(row.paid) }}
+              </p>
             </div>
 
             <div class="flex shrink-0 items-center gap-2">
-              <div class="flex flex-col items-center">
-                <label class="text-[9px] uppercase tracking-wide text-gray-400" :for="`wage-${row.labour_id}`">Wage</label>
+              <span
+                v-if="!row.present && parseAmount(row.paid) <= 0"
+                class="ui-badge-settled !bg-gray-100 !text-gray-500"
+              >
+                Absent
+              </span>
+              <span v-else-if="pendingOf(row) > 0" class="ui-badge-pending">
+                {{ formatAmount(pendingOf(row)) }}
+              </span>
+              <span v-else class="ui-badge-settled">Settled</span>
+
+              <AppNavIcon
+                name="chevron-down"
+                class="h-4 w-4 text-gray-400 transition-transform duration-200"
+                :class="{ 'rotate-180': row.expanded }"
+              />
+            </div>
+          </button>
+
+          <!-- Expanded: wage + paid inputs -->
+          <div v-if="row.expanded" class="border-t border-gray-100 bg-gray-50/80 px-4 py-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="ui-label" :for="`wage-${row.labour_id}`">Wage today</label>
                 <input
                   :id="`wage-${row.labour_id}`"
                   v-model="row.wage"
@@ -82,12 +108,12 @@
                   min="0"
                   step="0.01"
                   placeholder="0"
-                  class="ui-input w-20 py-1.5 text-right text-sm tabular-nums sm:w-24"
+                  class="ui-input text-right tabular-nums"
                   @input="onWageInput(row)"
                 />
               </div>
-              <div class="flex flex-col items-center">
-                <label class="text-[9px] uppercase tracking-wide text-gray-400" :for="`paid-${row.labour_id}`">Paid</label>
+              <div>
+                <label class="ui-label" :for="`paid-${row.labour_id}`">Paid today</label>
                 <input
                   :id="`paid-${row.labour_id}`"
                   v-model="row.paid"
@@ -95,60 +121,35 @@
                   min="0"
                   step="0.01"
                   placeholder="0"
-                  class="ui-input w-20 py-1.5 text-right text-sm tabular-nums sm:w-24"
+                  class="ui-input text-right tabular-nums"
                 />
               </div>
             </div>
 
-            <div class="flex w-16 shrink-0 flex-col items-end">
-              <span
-                v-if="!row.present && parseAmount(row.paid) <= 0"
-                class="rounded-full px-2 py-0.5 text-[10px] font-semibold text-gray-400"
-              >
-                Absent
+            <div class="mt-3 flex items-center justify-between text-xs">
+              <span class="text-gray-500">
+                Pending today:
+                <span
+                  class="font-semibold"
+                  :class="pendingOf(row) > 0 ? 'text-amber-600' : 'text-emerald-600'"
+                >
+                  {{ formatAmount(pendingOf(row)) }}
+                </span>
               </span>
-              <span
-                v-else-if="pendingOf(row) > 0"
-                class="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300 bg-amber-100 text-amber-700"
+              <button
+                v-if="parseAmount(row.wage) > 0"
+                type="button"
+                class="text-violet-700 hover:underline"
+                @click="row.paid = row.wage"
               >
-                {{ formatAmount(pendingOf(row)) }}
-              </span>
-              <span
-                v-else
-                class="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300 bg-emerald-100 text-emerald-700"
-              >
-                Settled
-              </span>
+                Paid = wage
+              </button>
             </div>
 
-            <button
-              type="button"
-              class="shrink-0 text-gray-400 transition-transform text-gray-400"
-              :class="{ 'rotate-180': row.expanded }"
-              @click="toggleExpand(row)"
-            >
-              <AppNavIcon name="chevron-down" class="h-4 w-4" />
-            </button>
-          </div>
-
-          <div v-if="row.expanded" class="border-t border-gray-100 bg-gray-50 px-4 py-3 text-xs border-gray-100 bg-gray-50">
-            <p class="text-gray-600">
+            <p class="mt-2 text-xs text-gray-500">
               Balance to date:
               <span class="font-semibold text-violet-700">{{ formatAmount(row.pendingWage) }}</span>
             </p>
-            <p v-if="row.historyLoading" class="mt-1 text-gray-400">Loading history…</p>
-            <template v-else-if="row.history && row.history.length">
-              <p class="mt-1 text-gray-400">Recent payments:</p>
-              <ul class="mt-1 space-y-0.5">
-                <li v-for="p in row.history" :key="p.id" class="text-gray-500 text-gray-600">
-                  {{ p.payment_date }} — {{ formatAmount(p.amount_paid) }}
-                </li>
-              </ul>
-            </template>
-            <p v-else class="mt-1 text-gray-400">No payment history yet.</p>
-            <NuxtLink :to="`/sites/${siteId}/crew/${row.labour_id}`" class="ui-link mt-2 inline-block text-xs">
-              View worker →
-            </NuxtLink>
           </div>
         </li>
       </ul>
@@ -180,8 +181,6 @@ type WageRow = {
   pendingWage: string
   present: boolean
   expanded: boolean
-  history: PaymentEntry[] | null
-  historyLoading: boolean
 }
 type DailyWagesResponse = {
   results: {
@@ -194,7 +193,6 @@ type DailyWagesResponse = {
     pending_wage: string
   }[]
 }
-type PaymentEntry = { id: string; amount_paid: string; payment_date: string }
 type DaySummary = {
   total_earned_today: string
   total_paid_today: string
@@ -253,16 +251,9 @@ function fillPaidEqualsWage() {
 
 async function toggleExpand(row: WageRow) {
   row.expanded = !row.expanded
-  if (row.expanded && row.history === null && !row.historyLoading) {
-    row.historyLoading = true
-    try {
-      const { data } = await api.get('/labour-payments/', { params: { labour_id: row.labour_id } })
-      row.history = unwrapResults<PaymentEntry>(data).slice(0, 5)
-    } catch {
-      row.history = []
-    } finally {
-      row.historyLoading = false
-    }
+  if (row.expanded) {
+    await nextTick()
+    document.getElementById(`wage-${row.labour_id}`)?.focus()
   }
 }
 
@@ -300,8 +291,6 @@ async function loadDay() {
       pendingWage: r.pending_wage,
       present: parseAmount(r.wage_today) > 0,
       expanded: false,
-      history: null,
-      historyLoading: false,
     }))
     focusFromQuery()
   } catch {
