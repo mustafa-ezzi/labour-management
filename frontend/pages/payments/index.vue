@@ -8,7 +8,7 @@ const id = readResolvedLastSiteId(cookie.value)
 await navigateTo(
   id
     ? {
-        path: `/sites/${id}/crew/pay`,
+        path: `/sites/${id}/crew/wages`,
         query: route.query,
       }
     : '/sites',

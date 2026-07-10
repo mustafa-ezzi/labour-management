@@ -14,6 +14,7 @@ from apps.api.permissions import IsAuthenticatedCompanyMember, user_company_ids
 from apps.api.serializers import (
     AttendanceSerializer,
     BulkAttendanceSerializer,
+    BulkDailyWageSerializer,
     BulkLabourPaymentSerializer,
     LabourPaymentSerializer,
     LabourSerializer,
@@ -23,8 +24,9 @@ from apps.api.serializers import (
 )
 from apps.labour_payments.services import record_labour_payment
 from apps.attendance.models import Attendance
-from apps.labour.balance import site_pending_as_of
+from apps.labour.balance import labour_pending_wage, site_pending_as_of
 from apps.labour.models import Labour
+from apps.labour.services import record_daily_wage_entry
 from apps.labour_payments.models import LabourPayment
 from apps.sites.models import Site
 
@@ -235,6 +237,114 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                     },
                 )
         return Response({"saved": len(marks)}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["get"], url_path="daily-wages")
+    def daily_wages(self, request):
+        """Combined roster for the Daily Wages screen: one row per active
+        worker with today's wage/paid/pending plus the running balance."""
+        site_id = request.query_params.get("site_id")
+        day = request.query_params.get("date")
+        if not site_id or not day:
+            return Response(
+                {"detail": "Query parameters site_id and date are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        allowed = user_company_ids(request.user)
+        site = Site.objects.filter(pk=site_id, company_id__in=allowed).first()
+        if not site:
+            return Response({"detail": "Site not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        labours = Labour.objects.filter(
+            site_id=site_id, company_id=site.company_id, status="active"
+        ).order_by("name")
+        attendances = {
+            a.labour_id: a
+            for a in Attendance.objects.filter(site_id=site_id, date=day)
+        }
+        payments = {
+            p.attendance_id: p
+            for p in LabourPayment.objects.filter(
+                labour__site_id=site_id, attendance_id__in=[a.pk for a in attendances.values()]
+            )
+        }
+
+        results = []
+        for lb in labours:
+            att = attendances.get(lb.pk)
+            payment = payments.get(att.pk) if att else None
+            wage_today = att.wage_rate if (att and att.present) else Decimal("0")
+            paid_today = payment.amount_paid if payment else Decimal("0")
+            results.append(
+                {
+                    "labour_id": str(lb.pk),
+                    "name": lb.name,
+                    "daily_wage": str(lb.daily_wage),
+                    "wage_today": str(wage_today),
+                    "paid_today": str(paid_today),
+                    "pending_today": str(wage_today - paid_today),
+                    "pending_wage": str(labour_pending_wage(lb, day)),
+                }
+            )
+
+        return Response({"site_id": str(site_id), "date": day, "results": results})
+
+    @action(detail=False, methods=["post"], url_path="bulk-wage-entry")
+    def bulk_wage_entry(self, request):
+        """Save a full day of "wage of the day" + "amount paid" entries at
+        once — the combined attendance+pay flow (Daily Wages)."""
+        ser = BulkDailyWageSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        site_id = ser.validated_data["site_id"]
+        day = ser.validated_data["date"]
+        notes = ser.validated_data.get("notes") or ""
+        entries = ser.validated_data["entries"]
+        allowed_companies = user_company_ids(request.user)
+        site = Site.objects.filter(pk=site_id, company_id__in=allowed_companies).first()
+        if not site:
+            return Response({"detail": "Site not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        labour_ids = {e["labour_id"] for e in entries}
+        labours = {
+            lb.pk: lb
+            for lb in Labour.objects.filter(
+                site_id=site_id, company_id=site.company_id, pk__in=labour_ids
+            )
+        }
+        if len(labours) != len(labour_ids):
+            return Response(
+                {"detail": "One or more workers are not on this site."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        results = []
+        errors = []
+        with transaction.atomic():
+            for entry in entries:
+                labour = labours[entry["labour_id"]]
+                try:
+                    attendance, payment, pending_wage = record_daily_wage_entry(
+                        labour,
+                        day,
+                        entry.get("wage_amount") or Decimal("0"),
+                        entry.get("amount_paid") or Decimal("0"),
+                        notes,
+                    )
+                    results.append(
+                        {
+                            "labour_id": str(labour.pk),
+                            "wage_today": str(attendance.wage_rate if attendance.present else Decimal("0")),
+                            "paid_today": str(payment.amount_paid) if payment else "0",
+                            "pending_wage": str(pending_wage),
+                        }
+                    )
+                except ValueError as exc:
+                    errors.append({"labour_id": str(labour.pk), "error": str(exc)})
+
+            if errors:
+                transaction.set_rollback(True)
+                return Response({"entries": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"saved": len(results), "results": results}, status=status.HTTP_200_OK)
 
 
 class LabourPaymentViewSet(viewsets.ModelViewSet):

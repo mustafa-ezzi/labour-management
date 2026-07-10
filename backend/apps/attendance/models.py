@@ -62,6 +62,11 @@ class Attendance(models.Model):
                 self.company_id = self.labour.company_id
             if not self.site_id:
                 self.site_id = self.labour.site_id
-            self.wage_rate = self.labour.daily_wage if self.present else Decimal("0")
+            if not self.present:
+                self.wage_rate = Decimal("0")
+            elif not self.wage_rate:
+                # Explicit "wage of the day" values are preserved; only default
+                # to the worker's standard rate when none was supplied.
+                self.wage_rate = self.labour.daily_wage
         self.full_clean()
         super().save(*args, **kwargs)

@@ -6,48 +6,48 @@
       </template>
     </UiPageHeader>
 
-    <div class="mb-5 grid grid-cols-2 gap-3">
-      <NuxtLink
-        :to="`/sites/${siteId}/crew/attendance`"
-        class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 transition-all hover:border-green-400/40 hover:bg-green-500/[0.07] lg:border-gray-200 lg:bg-white lg:hover:border-green-400 lg:hover:bg-green-50"
+    <NuxtLink
+      :to="`/sites/${siteId}/crew/wages`"
+      class="mb-5 flex items-center gap-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 transition-all hover:border-violet-300 hover:bg-violet-100"
+    >
+      <span
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-600 text-white shadow-md"
+        style="box-shadow: 0 2px 12px rgba(124,58,237,0.4)"
       >
-        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-green-600 text-white">
-          <AppNavIcon name="attendance" class="h-4 w-4" />
-        </span>
-        <div class="min-w-0">
-          <p class="text-sm font-semibold text-white lg:text-gray-900">Attendance</p>
-          <p class="text-[11px] text-white/45 lg:text-gray-500">Mark today’s roster</p>
-        </div>
-      </NuxtLink>
-      <NuxtLink
-        :to="`/sites/${siteId}/crew/pay`"
-        class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 transition-all hover:border-green-400/40 hover:bg-green-500/[0.07] lg:border-gray-200 lg:bg-white lg:hover:border-green-400 lg:hover:bg-green-50"
-      >
-        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-green-600 text-white">
-          <AppNavIcon name="pay" class="h-4 w-4" />
-        </span>
-        <div class="min-w-0">
-          <p class="text-sm font-semibold text-white lg:text-gray-900">Pay</p>
-          <p class="text-[11px] text-white/45 lg:text-gray-500">Settle pending wages</p>
-        </div>
-      </NuxtLink>
-    </div>
+        <AppNavIcon name="wages" class="h-5 w-5" />
+      </span>
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-semibold text-gray-900">Daily Wages</p>
+        <p class="text-[11px] text-gray-500">Attendance + pay for today, one page</p>
+      </div>
+      <AppNavIcon name="chevron-down" class="h-4 w-4 shrink-0 -rotate-90 text-gray-400" />
+    </NuxtLink>
 
     <p v-if="loading" class="ui-muted">Loading…</p>
-    <p v-else-if="error" class="text-red-400">{{ error }}</p>
-    <ul v-else-if="labours.length" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <p v-else-if="error" class="text-red-600">{{ error }}</p>
+    <ul v-else-if="labours.length" class="divide-y divide-gray-100 overflow-hidden rounded-xl border divide-y divide-gray-100 border border-gray-200 bg-white">
       <li v-for="l in labours" :key="l.id">
         <NuxtLink
           :to="`/sites/${siteId}/crew/${l.id}`"
-          class="ui-card-hover flex h-full items-center justify-between gap-3"
+          class="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-violet-50/40"
         >
-          <div class="min-w-0">
-            <p class="truncate font-medium text-white lg:text-gray-900">{{ l.name }}</p>
-            <p class="ui-muted mt-0.5">
-              {{ l.daily_wage }} / day ·
+          <span
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold uppercase"
+            :class="
+              l.status === 'active'
+                ? 'bg-violet-600 text-white'
+                : 'border border-gray-300 text-gray-400'
+            "
+          >
+            {{ l.name.slice(0, 1) }}
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-semibold text-gray-900">{{ l.name }}</p>
+            <p class="ui-muted mt-0.5 text-xs">
+              {{ l.daily_wage }}/day ·
               <span
                 :class="
-                  l.status === 'active' ? 'text-green-400 lg:text-green-700' : 'text-amber-400 lg:text-amber-600'
+                  l.status === 'active' ? 'text-violet-700' : 'text-amber-600'
                 "
               >
                 {{ l.status }}
@@ -55,14 +55,21 @@
             </p>
           </div>
           <div class="shrink-0 text-right">
-            <p class="text-[10px] uppercase tracking-wide text-white/35 lg:text-gray-400">Due</p>
-            <p class="text-sm font-bold tabular-nums text-amber-300 lg:text-amber-600">{{ l.pending_wage }}</p>
+            <p class="text-[10px] uppercase tracking-wide text-gray-400">
+              {{ parseFloat(l.pending_wage) > 0 ? 'Due' : 'Settled' }}
+            </p>
+            <p
+              class="text-sm font-bold tabular-nums"
+              :class="parseFloat(l.pending_wage) > 0 ? 'text-amber-600' : 'text-emerald-600'"
+            >
+              {{ l.pending_wage }}
+            </p>
           </div>
         </NuxtLink>
       </li>
     </ul>
     <UiCard v-else class="text-center">
-      <p class="text-white/70 lg:text-gray-600">No workers on this site yet</p>
+      <p class="text-gray-600">No workers on this site yet</p>
       <NuxtLink :to="`/sites/${siteId}/crew/new`" class="ui-btn-primary mt-4 inline-flex">Add worker</NuxtLink>
     </UiCard>
   </div>

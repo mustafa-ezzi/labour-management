@@ -1,7 +1,7 @@
 <template>
   <div>
     <NuxtLink :to="`/sites/${siteId}/materials`" class="ui-link mb-4 inline-block">← Materials</NuxtLink>
-    <h1 class="mb-5 text-xl font-bold text-white lg:text-gray-900">Add material</h1>
+    <h1 class="mb-5 text-xl font-bold text-gray-900">Add material</h1>
     <UiCard>
       <form class="space-y-4" @submit.prevent="submit">
         <div>
@@ -28,18 +28,18 @@
             <input id="rate" v-model="ratePerUnit" type="number" min="0" step="0.01" required class="ui-input" />
           </div>
         </div>
-        <div v-if="ratePerUnit" class="rounded-lg border border-green-500/20 bg-green-500/[0.06] px-4 py-3 lg:border-green-200 lg:bg-green-50">
-          <p class="text-xs font-semibold uppercase tracking-widest text-green-300 lg:text-green-600">Cost preview</p>
-          <p class="mt-1 font-mono text-sm text-white lg:text-gray-800">
+        <div v-if="ratePerUnit" class="rounded-lg border border-violet-500/20 bg-violet-500/[0.06] px-4 py-3 border-violet-200 bg-violet-50">
+          <p class="text-xs font-semibold uppercase tracking-widest text-violet-300 text-violet-600">Cost preview</p>
+          <p class="mt-1 font-mono text-sm text-gray-800">
             1 {{ unitOfMeasure || 'unit' }} × {{ fmtMoney(ratePerUnit) }} =
-            <span class="font-bold text-green-300 lg:text-green-700">{{ fmtMoney(ratePerUnit) }}</span>
+            <span class="font-bold text-violet-700">{{ fmtMoney(ratePerUnit) }}</span>
           </p>
         </div>
         <div>
           <label class="ui-label" for="notes">Notes (optional)</label>
           <input id="notes" v-model="notes" class="ui-input" />
         </div>
-        <p v-if="err" class="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+        <p v-if="err" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
           {{ err }}
         </p>
         <button type="submit" class="ui-btn-primary w-full" :disabled="saving">

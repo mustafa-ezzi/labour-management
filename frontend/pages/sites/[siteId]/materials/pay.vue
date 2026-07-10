@@ -32,19 +32,19 @@
         <p class="ui-label !mb-3">Payment summary</p>
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div>
-            <p class="text-xs text-white/40 lg:text-gray-500">Materials selected</p>
-            <p class="ui-stat-value !text-base lg:!text-gray-900">{{ selectedCount }}</p>
+            <p class="text-xs text-gray-500">Materials selected</p>
+            <p class="ui-stat-value !text-base text-gray-900">{{ selectedCount }}</p>
           </div>
           <div>
-            <p class="text-xs text-white/40 lg:text-gray-500">Total payable</p>
-            <p class="ui-stat-value !text-base lg:!text-gray-900">{{ formatAmount(totalPayable) }}</p>
+            <p class="text-xs text-gray-500">Total payable</p>
+            <p class="ui-stat-value !text-base text-gray-900">{{ formatAmount(totalPayable) }}</p>
           </div>
           <div class="col-span-2 sm:col-span-1">
-            <p class="text-xs text-white/40 lg:text-gray-500">Amount paying</p>
-            <p class="ui-stat-value !text-base text-green-300 lg:!text-green-700">{{ formatAmount(totalPaying) }}</p>
+            <p class="text-xs text-gray-500">Amount paying</p>
+            <p class="ui-stat-value !text-base text-violet-300 lg:!text-violet-700">{{ formatAmount(totalPaying) }}</p>
           </div>
         </div>
-        <p v-if="totalPaying > totalPayable" class="mt-2 text-sm text-red-400">
+        <p v-if="totalPaying > totalPayable" class="mt-2 text-sm text-red-600">
           Paying more than total outstanding for selected materials.
         </p>
         <button
@@ -55,28 +55,28 @@
         >
           {{ submitting ? 'Processing…' : `Pay ${selectedCount} material${selectedCount === 1 ? '' : 's'}` }}
         </button>
-        <p v-if="formErr" class="mt-2 text-sm text-red-400">{{ formErr }}</p>
-        <p v-if="successMsg" class="mt-2 text-sm text-green-400">{{ successMsg }}</p>
+        <p v-if="formErr" class="mt-2 text-sm text-red-600">{{ formErr }}</p>
+        <p v-if="successMsg" class="mt-2 text-sm text-violet-400">{{ successMsg }}</p>
       </div>
     </div>
 
     <p v-if="loading" class="ui-muted">Loading materials…</p>
-    <p v-else-if="loadErr" class="text-red-400">{{ loadErr }}</p>
+    <p v-else-if="loadErr" class="text-red-600">{{ loadErr }}</p>
     <template v-else>
       <div
         v-if="rows.length"
-        class="mb-3 flex items-center gap-3 rounded-lg border border-white/[0.07] bg-white/[0.04] px-4 py-3 lg:border-gray-200 lg:bg-white lg:shadow-sm"
+        class="mb-3 flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 border-gray-200 bg-white shadow-sm"
       >
-        <label class="flex cursor-pointer items-center gap-2 text-sm text-white/70 lg:text-gray-700">
+        <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-600 text-gray-700">
           <input
             v-model="allSelected"
             type="checkbox"
-            class="h-5 w-5 rounded border-white/30 text-green-500 lg:border-gray-400"
+            class="h-5 w-5 rounded border-gray-300 text-violet-600"
             @change="toggleSelectAll"
           />
           Select all with balance
         </label>
-        <span class="text-xs text-white/35 lg:text-gray-400">{{ rowsWithBalance.length }} owing</span>
+        <span class="text-xs text-gray-400">{{ rowsWithBalance.length }} owing</span>
       </div>
 
       <ul class="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
@@ -86,23 +86,23 @@
           class="flex flex-col gap-3 rounded-lg border px-4 py-3 sm:flex-row sm:items-center"
           :class="
             row.selected
-              ? 'border-green-500/30 bg-green-500/[0.07] lg:border-green-300 lg:bg-green-50'
-              : 'border-white/[0.07] bg-white/[0.04] lg:border-gray-200 lg:bg-white lg:shadow-sm'
+              ? 'border-violet-500/30 bg-violet-50 lg:border-violet-300 lg:bg-violet-50'
+              : 'border-gray-200 bg-white border-gray-200 bg-white shadow-sm'
           "
         >
           <label class="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
             <input
               v-model="row.selected"
               type="checkbox"
-              class="h-5 w-5 shrink-0 rounded border-white/30 text-green-500"
+              class="h-5 w-5 shrink-0 rounded border-gray-300 text-violet-600"
               :disabled="row.pendingNum <= 0"
               @change="onRowSelect(row)"
             />
             <div class="min-w-0">
-              <p class="truncate font-medium text-white lg:text-gray-900">{{ row.material.name }}</p>
-              <p class="text-xs text-white/40 lg:text-gray-500">
+              <p class="truncate font-medium text-gray-900">{{ row.material.name }}</p>
+              <p class="text-xs text-gray-500">
                 Logged {{ formatAmount(row.material.total_amount_spent) }} · Pending
-                <span class="font-semibold text-amber-300/90 lg:text-amber-600">{{ formatAmount(row.pendingNum) }}</span>
+                <span class="font-semibold text-amber-600">{{ formatAmount(row.pendingNum) }}</span>
               </p>
             </div>
           </label>
@@ -124,13 +124,13 @@
         </li>
       </ul>
       <UiCard v-if="!rows.length" class="mt-4 text-center">
-        <p class="text-white/60 lg:text-gray-600">No materials on this site yet.</p>
+        <p class="text-gray-600">No materials on this site yet.</p>
         <NuxtLink :to="`/sites/${siteId}/materials/new`" class="ui-btn-primary mt-4 inline-flex">
           Add material
         </NuxtLink>
       </UiCard>
       <UiCard v-else-if="!rowsWithBalance.length" class="mt-4 text-center">
-        <p class="text-white/60 lg:text-gray-600">All material costs are paid up.</p>
+        <p class="text-gray-600">All material costs are paid up.</p>
       </UiCard>
     </template>
   </div>

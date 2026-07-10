@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -220,6 +222,29 @@ class BulkAttendanceSerializer(serializers.Serializer):
     site_id = serializers.UUIDField()
     date = serializers.DateField()
     marks = AttendanceMarkItemSerializer(many=True)
+
+
+class DailyWageEntrySerializer(serializers.Serializer):
+    labour_id = serializers.UUIDField()
+    wage_amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, required=False, allow_null=True, default=Decimal("0")
+    )
+    amount_paid = serializers.DecimalField(
+        max_digits=12, decimal_places=2, required=False, allow_null=True, default=Decimal("0")
+    )
+
+    def validate_wage_amount(self, value):
+        return value if value is not None else Decimal("0")
+
+    def validate_amount_paid(self, value):
+        return value if value is not None else Decimal("0")
+
+
+class BulkDailyWageSerializer(serializers.Serializer):
+    site_id = serializers.UUIDField()
+    date = serializers.DateField()
+    notes = serializers.CharField(required=False, allow_blank=True, max_length=512, default="")
+    entries = DailyWageEntrySerializer(many=True)
 
 
 class LabourPaymentSerializer(serializers.ModelSerializer):

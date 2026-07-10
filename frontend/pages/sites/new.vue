@@ -23,7 +23,7 @@
           <input id="to" v-model="toDate" type="date" required class="ui-input" />
         </div>
       </div>
-      <p v-if="err" class="text-sm text-red-400">{{ err }}</p>
+      <p v-if="err" class="text-sm text-red-600">{{ err }}</p>
       <button type="submit" class="ui-btn-primary w-full" :disabled="loading">
         {{ loading ? 'Saving…' : 'Save site' }}
       </button>

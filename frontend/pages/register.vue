@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="mb-7">
-      <h1 class="text-2xl font-black tracking-tight text-white">Create account</h1>
+      <h1 class="text-2xl font-black tracking-tight text-gray-900">Create account</h1>
       <p class="ui-muted mt-1">Set up your company workspace in seconds</p>
     </div>
 
@@ -40,7 +40,7 @@
           placeholder="Min. 8 characters"
         />
       </div>
-      <p v-if="error" class="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+      <p v-if="error" class="ui-error-banner">
         {{ error }}
       </p>
       <button type="submit" class="ui-btn-primary mt-1 w-full py-3" :disabled="loading">

@@ -17,11 +17,8 @@ export default defineNuxtRouteMiddleware((to) => {
   if (to.path === '/labour' || to.path === '/labour/') {
     return last ? navigateTo(`/sites/${last}/crew`) : goSites()
   }
-  if (to.path === '/labour/attendance') {
-    return last ? navigateTo(`/sites/${last}/crew/attendance`) : goSites()
-  }
-  if (to.path === '/labour/pay') {
-    return last ? navigateTo({ path: `/sites/${last}/crew/pay`, query: to.query }) : goSites()
+  if (to.path === '/labour/attendance' || to.path === '/labour/pay') {
+    return last ? navigateTo({ path: `/sites/${last}/crew/wages`, query: to.query }) : goSites()
   }
   if (to.path === '/labour/new') {
     return last ? navigateTo(`/sites/${last}/crew/new`) : goSites()

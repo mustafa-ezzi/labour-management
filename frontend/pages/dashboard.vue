@@ -3,18 +3,31 @@
     <UiPageHeader title="Dashboard" subtitle="Overview of your company" />
 
     <p v-if="pending" class="ui-muted">Loading…</p>
-    <p v-else-if="err" class="text-red-400">{{ err }}</p>
+    <p v-else-if="err" class="text-red-600">{{ err }}</p>
     <template v-else>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <UiCard>
           <p class="ui-label">Company</p>
-          <p class="ui-stat-value mt-1 !text-base lg:!text-gray-900">{{ me?.company?.name }}</p>
+          <p class="ui-stat-value mt-1 !text-base text-gray-900">{{ me?.company?.name }}</p>
           <p class="ui-muted mt-1 capitalize">Role: {{ me?.company?.role }}</p>
         </UiCard>
         <UiCard>
           <p class="ui-label">Signed in as</p>
-          <p class="mt-1 break-all text-sm font-medium text-white lg:text-gray-800 lg:text-base">{{ me?.user?.email }}</p>
+          <p class="mt-1 break-all text-sm font-medium text-gray-800 lg:text-base">{{ me?.user?.email }}</p>
         </UiCard>
+      </div>
+
+      <div v-if="showInstallCard" class="mt-6">
+        <div class="flex items-center gap-4 rounded-xl border border-violet-200 bg-violet-50 p-4">
+          <img src="/logo.png" alt="LabourPro" class="h-12 w-12 shrink-0 rounded-lg object-contain" />
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-bold text-gray-900">Install LabourPro on your phone</p>
+            <p class="mt-0.5 text-xs text-gray-600">One tap access from your home screen.</p>
+          </div>
+          <button type="button" class="ui-btn-primary shrink-0 py-2 text-xs" @click="triggerInstall">
+            Install
+          </button>
+        </div>
       </div>
 
       <div v-if="lastSiteLink" class="mt-8">
@@ -22,8 +35,8 @@
           :to="lastSiteLink"
           class="ui-card-hover block px-5 py-4"
         >
-          <p class="text-xs font-semibold uppercase tracking-widest text-green-400/80 lg:text-green-700">Continue</p>
-          <p class="mt-1 font-semibold text-white lg:text-gray-900">Resume last opened site →</p>
+          <p class="text-xs font-semibold uppercase tracking-widest text-violet-700">Continue</p>
+          <p class="mt-1 font-semibold text-gray-900">Resume last opened site →</p>
         </NuxtLink>
       </div>
 
@@ -32,8 +45,8 @@
 
       <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink to="/sites" class="ui-card-hover block p-4 lg:p-5">
-          <AppNavIcon name="site" class="mb-3 text-green-400 lg:text-green-700" />
-          <p class="font-semibold text-white lg:text-gray-900">Sites</p>
+          <AppNavIcon name="site" class="mb-3 text-violet-700" />
+          <p class="font-semibold text-gray-900">Sites</p>
           <p class="ui-muted mt-1">Pick a site to manage crew &amp; materials there</p>
         </NuxtLink>
       </div>
@@ -55,6 +68,15 @@ const pending = ref(true)
 const err = ref('')
 
 const lastSiteLink = useResumeSitePath()
+const { showPrompt, canNativeInstall, isIos, install } = usePwaInstall()
+
+const showInstallCard = computed(() => showPrompt.value && (canNativeInstall.value || isIos.value))
+
+async function triggerInstall() {
+  if (canNativeInstall.value) {
+    await install()
+  }
+}
 
 onMounted(async () => {
   try {

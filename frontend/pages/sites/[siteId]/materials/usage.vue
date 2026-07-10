@@ -12,19 +12,19 @@
 
         <UiCard v-if="daySummary">
           <p class="ui-label !mb-3">Today's material cost</p>
-          <p class="text-2xl font-black tabular-nums text-white lg:text-gray-900">
+          <p class="text-2xl font-black tabular-nums text-gray-900">
             {{ fmtMoney(daySummary.total_cost) }}
           </p>
-          <div class="mt-3 grid grid-cols-2 gap-3 border-t border-white/[0.07] pt-3 lg:border-gray-100">
+          <div class="mt-3 grid grid-cols-2 gap-3 border-t border-gray-100 pt-3 lg:border-gray-100">
             <div>
-              <p class="text-[10px] font-semibold uppercase text-white/40 lg:text-gray-400">Paid</p>
-              <p class="text-sm font-bold tabular-nums text-white lg:text-gray-800">
+              <p class="text-[10px] font-semibold uppercase text-gray-400">Paid</p>
+              <p class="text-sm font-bold tabular-nums text-gray-800">
                 {{ fmtMoney(daySummary.total_paid) }}
               </p>
             </div>
             <div>
-              <p class="text-[10px] font-semibold uppercase text-white/40 lg:text-gray-400">Pending</p>
-              <p class="text-sm font-bold tabular-nums text-amber-300 lg:text-amber-600">
+              <p class="text-[10px] font-semibold uppercase text-gray-400">Pending</p>
+              <p class="text-sm font-bold tabular-nums text-amber-600">
                 {{ fmtMoney(daySummary.total_pending) }}
               </p>
             </div>
@@ -40,7 +40,7 @@
         </UiCard>
 
         <UiCard v-if="materials.length">
-          <p class="mb-3 text-sm font-semibold text-white/80 lg:text-gray-700">Add usage entry</p>
+          <p class="mb-3 text-sm font-semibold text-gray-800 text-gray-700">Add usage entry</p>
 
           <div class="space-y-3">
             <div>
@@ -71,16 +71,16 @@
 
             <div
               v-if="selectedMaterial && form.quantity && Number(form.quantity) > 0"
-              class="rounded-lg border border-green-500/25 bg-green-500/[0.07] px-4 py-3 lg:border-green-200 lg:bg-green-50"
+              class="rounded-lg border border-violet-500/25 bg-violet-50 px-4 py-3 border-violet-200 bg-violet-50"
             >
-              <p class="text-[10px] font-semibold uppercase tracking-widest text-green-300 lg:text-green-600">
+              <p class="text-[10px] font-semibold uppercase tracking-widest text-violet-300 text-violet-600">
                 Formula
               </p>
-              <p class="mt-1 font-mono text-sm text-white lg:text-gray-800">
+              <p class="mt-1 font-mono text-sm text-gray-800">
                 {{ fmtQty(form.quantity) }} {{ selectedMaterial.unit_of_measure }}
                 × {{ fmtMoney(selectedMaterial.rate_per_unit) }}
               </p>
-              <p class="mt-2 text-xl font-black tabular-nums text-green-300 lg:text-green-700">
+              <p class="mt-2 text-xl font-black tabular-nums text-violet-700">
                 = {{ fmtMoney(calculatedAmount) }}
               </p>
             </div>
@@ -90,10 +90,10 @@
               <input id="fnotes" v-model="form.notes" class="ui-input" placeholder="e.g. Foundation work" />
             </div>
 
-            <p v-if="formErr" class="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+            <p v-if="formErr" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
               {{ formErr }}
             </p>
-            <p v-if="formSuccess" class="text-sm text-green-400 lg:text-green-700">{{ formSuccess }}</p>
+            <p v-if="formSuccess" class="text-sm text-violet-700">{{ formSuccess }}</p>
 
             <button
               type="button"
@@ -118,31 +118,31 @@
             <div
               v-for="entry in entries"
               :key="entry.id"
-              class="rounded-lg border border-white/[0.07] bg-white/[0.04] px-4 py-3 lg:border-gray-200 lg:bg-white lg:shadow-sm"
+              class="rounded-lg border border-gray-200 bg-white px-4 py-3 border-gray-200 bg-white shadow-sm"
             >
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2">
-                    <p class="font-semibold text-white lg:text-gray-900">{{ entry.material_name }}</p>
+                    <p class="font-semibold text-gray-900">{{ entry.material_name }}</p>
                     <span
-                      class="rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-white/[0.07] text-white/50 lg:bg-gray-100 lg:text-gray-500"
+                      class="rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-500 lg:bg-gray-100 text-gray-500"
                     >
                       {{ entry.unit_of_measure }}
                     </span>
                   </div>
-                  <p class="mt-1 font-mono text-sm text-white/70 lg:text-gray-600">
+                  <p class="mt-1 font-mono text-sm text-gray-600">
                     {{ fmtQty(entry.quantity_used) }} {{ entry.unit_of_measure }}
                     × {{ fmtMoney(entry.rate_per_unit) }}
-                    = <span class="font-bold text-green-300 lg:text-green-700">{{ fmtMoney(entry.calculated_amount) }}</span>
+                    = <span class="font-bold text-violet-700">{{ fmtMoney(entry.calculated_amount) }}</span>
                   </p>
-                  <p class="mt-1 text-xs text-white/45 lg:text-gray-500">
+                  <p class="mt-1 text-xs text-gray-500">
                     Due {{ fmtMoney(entry.pending_amount) }}
                   </p>
-                  <p v-if="entry.notes" class="mt-0.5 text-xs text-white/40 lg:text-gray-400">{{ entry.notes }}</p>
+                  <p v-if="entry.notes" class="mt-0.5 text-xs text-gray-400">{{ entry.notes }}</p>
                 </div>
                 <button
                   type="button"
-                  class="shrink-0 text-xs text-red-300/60 hover:text-red-300 hover:underline lg:text-red-400/70 lg:hover:text-red-500"
+                  class="shrink-0 text-xs text-red-600/60 hover:text-red-600 hover:underline hover:text-red-600"
                   @click="deleteEntry(entry.id)"
                 >
                   Remove
@@ -151,7 +151,7 @@
             </div>
           </div>
           <UiCard v-else-if="siteId" class="text-center">
-            <p class="text-white/50 lg:text-gray-500">No entries for {{ usageDate }}</p>
+            <p class="text-gray-500">No entries for {{ usageDate }}</p>
           </UiCard>
         </template>
       </div>

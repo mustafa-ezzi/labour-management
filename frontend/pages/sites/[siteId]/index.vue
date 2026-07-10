@@ -1,29 +1,29 @@
 <template>
   <div>
     <p v-if="pending" class="ui-muted">Loading…</p>
-    <p v-else-if="error" class="text-red-400">{{ error }}</p>
+    <p v-else-if="error" class="text-red-600">{{ error }}</p>
     <div v-else-if="site" class="space-y-6">
-      <p v-if="siteMeta" class="text-xs text-white/45 lg:text-gray-500">
+      <p v-if="siteMeta" class="text-xs text-gray-500">
         {{ siteMeta }}
       </p>
 
       <div>
         <h2 class="ui-label mb-3">Today’s tasks</h2>
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid gap-3 sm:grid-cols-3">
           <NuxtLink
             v-for="t in tasks"
             :key="t.to"
             :to="t.to"
-            class="group flex flex-col gap-3 rounded-xl border border-green-500/20 bg-green-500/[0.07] p-4 transition-all hover:border-green-400/50 hover:bg-green-500/[0.12] lg:border-green-200 lg:bg-green-50 lg:hover:border-green-400 lg:hover:bg-green-100"
+            class="group flex flex-col gap-3 rounded-xl border border-violet-500/20 bg-violet-50 p-4 transition-all hover:border-violet-400/50 hover:bg-violet-500/[0.12] border-violet-200 bg-violet-50 hover:border-violet-300 hover:bg-violet-100"
           >
             <span
-              class="flex h-10 w-10 items-center justify-center rounded-lg bg-green-600 text-white shadow-md"
-              style="box-shadow: 0 2px 12px rgba(22,163,74,0.4)"
+              class="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-600 text-white shadow-md"
+              style="box-shadow: 0 2px 12px rgba(124,58,237,0.4)"
             >
               <AppNavIcon :name="t.icon" class="h-5 w-5" />
             </span>
             <div>
-              <p class="font-semibold text-white lg:text-gray-900">{{ t.label }}</p>
+              <p class="font-semibold text-gray-900">{{ t.label }}</p>
               <p class="ui-muted mt-0.5 text-xs">{{ t.desc }}</p>
             </div>
           </NuxtLink>
@@ -32,26 +32,26 @@
 
       <div>
         <h2 class="ui-label mb-3">Browse</h2>
-        <div class="grid gap-3 sm:grid-cols-2">
-          <NuxtLink
-            :to="`/sites/${siteId}/crew`"
-            class="ui-card-hover flex items-center gap-3 p-4"
-          >
-            <AppNavIcon name="crew" class="h-5 w-5 text-white/55 lg:text-gray-500" />
-            <div>
-              <p class="font-medium text-white lg:text-gray-900">Workers</p>
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <NuxtLink :to="`/sites/${siteId}/crew`" class="ui-list-row">
+            <span class="ui-icon-chip h-9 w-9">
+              <AppNavIcon name="crew" class="h-4 w-4" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="font-medium text-gray-900">Workers</p>
               <p class="ui-muted text-xs">Roster, wages, payment history</p>
             </div>
+            <AppNavIcon name="chevron-down" class="h-4 w-4 shrink-0 -rotate-90 text-gray-400" />
           </NuxtLink>
-          <NuxtLink
-            :to="`/sites/${siteId}/materials`"
-            class="ui-card-hover flex items-center gap-3 p-4"
-          >
-            <AppNavIcon name="materials" class="h-5 w-5 text-white/55 lg:text-gray-500" />
-            <div>
-              <p class="font-medium text-white lg:text-gray-900">Materials</p>
+          <NuxtLink :to="`/sites/${siteId}/materials`" class="ui-list-row">
+            <span class="ui-icon-chip h-9 w-9">
+              <AppNavIcon name="materials" class="h-4 w-4" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="font-medium text-gray-900">Materials</p>
               <p class="ui-muted text-xs">Definitions and total costs</p>
             </div>
+            <AppNavIcon name="chevron-down" class="h-4 w-4 shrink-0 -rotate-90 text-gray-400" />
           </NuxtLink>
         </div>
       </div>
@@ -87,16 +87,10 @@ const siteMeta = computed(() => {
 
 const tasks = computed(() => [
   {
-    to: `/sites/${siteId.value}/crew/attendance`,
-    label: 'Mark attendance',
-    desc: "Today's roster",
-    icon: 'attendance',
-  },
-  {
-    to: `/sites/${siteId.value}/crew/pay`,
-    label: 'Pay crew',
-    desc: 'Settle pending wages',
-    icon: 'pay',
+    to: `/sites/${siteId.value}/crew/wages`,
+    label: 'Daily wages',
+    desc: 'Attendance + pay, one page',
+    icon: 'wages',
   },
   {
     to: `/sites/${siteId.value}/materials/usage`,

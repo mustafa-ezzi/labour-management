@@ -1,9 +1,9 @@
 <template>
   <div>
-    <header class="mb-5 flex items-center gap-3 border-b border-white/10 pb-3 lg:mb-6">
+    <header class="mb-5 flex items-center gap-3 border-b border-gray-200 pb-3">
       <NuxtLink
         to="/sites"
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/55 transition-colors hover:bg-white/[0.07] hover:text-white lg:text-gray-500 lg:hover:bg-gray-100 lg:hover:text-gray-800"
+        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
         aria-label="All sites"
       >
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -11,8 +11,8 @@
         </svg>
       </NuxtLink>
       <div class="min-w-0">
-        <p class="text-[10px] font-semibold uppercase tracking-widest text-white/40 lg:text-gray-400">Site</p>
-        <h1 class="truncate text-lg font-bold leading-tight text-white lg:text-xl lg:text-gray-900">
+        <p class="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Site</p>
+        <h1 class="truncate text-lg font-bold leading-tight text-gray-900">
           {{ heading }}
         </h1>
       </div>

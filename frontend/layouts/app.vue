@@ -1,40 +1,12 @@
 <template>
-  <!--
-    Mobile  : deep-green gradient bg, glass cards, glass nav bars
-    Desktop : forest-green bg (#174c2f), darker sidebar, solid-green active nav,
-              white content cards — matches the LaborPro design reference
-  -->
-  <div
-    class="min-h-dvh text-white lg:flex"
-    style="background: linear-gradient(160deg, #0d2b1a 0%, #0f3520 50%, #0b2617 100%)"
-  >
-    <!-- ── Backdrop glow (mobile atmosphere) ────────────────── -->
-    <div
-      class="pointer-events-none fixed inset-0 z-0 lg:hidden"
-      style="background: radial-gradient(ellipse 120% 60% at 50% 0%, rgba(22,163,74,0.15) 0%, transparent 70%)"
-      aria-hidden="true"
-    />
-
-    <!-- ── Desktop sidebar ──────────────────────────────────── -->
-    <aside
-      class="relative z-10 hidden lg:flex lg:w-56 lg:shrink-0 lg:flex-col"
-      style="background: #081f11; border-right: 1px solid rgba(255,255,255,0.07)"
-    >
-      <!-- Brand -->
-      <div class="flex items-center gap-3 px-5 py-5" style="border-bottom: 1px solid rgba(255,255,255,0.07)">
-        <span
-          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-600 text-xs font-black text-white"
-          style="box-shadow: 0 2px 12px rgba(22,163,74,0.5)"
-        >
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-          </svg>
-        </span>
-        <span class="text-sm font-bold tracking-tight text-white">LabourPro</span>
+  <div class="ui-app-bg lg:flex">
+    <!-- Desktop sidebar -->
+    <aside class="relative z-10 hidden w-56 shrink-0 flex-col border-r border-[#e9e4f5] bg-white lg:flex">
+      <div class="flex items-center gap-3 border-b border-[#e9e4f5] px-5 py-5">
+        <img src="/logo.png" alt="LabourPro" class="h-9 w-9 shrink-0 rounded-lg object-contain" />
+        <span class="text-sm font-bold tracking-tight text-gray-900">LabourPro</span>
       </div>
 
-      <!-- Nav -->
       <nav class="flex flex-1 flex-col gap-0.5 px-3 py-3">
         <NuxtLink
           v-for="item in items"
@@ -43,8 +15,8 @@
           class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150"
           :class="
             isActive(item)
-              ? 'bg-green-700 text-white font-semibold'
-              : 'text-white/55 hover:bg-white/[0.07] hover:text-white'
+              ? 'bg-violet-700 font-semibold text-white shadow-sm'
+              : 'text-gray-600 hover:bg-violet-50 hover:text-violet-800'
           "
         >
           <AppNavIcon :name="item.icon" class="h-4 w-4 shrink-0" />
@@ -52,11 +24,10 @@
         </NuxtLink>
       </nav>
 
-      <!-- Sign out -->
-      <div class="px-3 pb-5" style="border-top: 1px solid rgba(255,255,255,0.07); padding-top: 12px; margin-top: 4px">
+      <div class="mt-1 border-t border-[#e9e4f5] px-3 pb-5 pt-3">
         <button
           type="button"
-          class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/75"
+          class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
           @click="logout"
         >
           <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -68,63 +39,46 @@
       </div>
     </aside>
 
-    <!-- ── Main column ────────────────────────────────────── -->
-    <div
-      class="relative z-10 flex min-h-dvh min-w-0 flex-1 flex-col pb-[4.5rem] lg:pb-0"
-      style="background: linear-gradient(160deg, #0d2b1a 0%, #0f3520 50%, #0b2617 100%); lg:background: #132d1b"
-    >
-      <!-- Top bar — glass always -->
-      <header
-        class="sticky top-0 z-20 backdrop-blur-2xl"
-        style="
-          background: rgba(8, 22, 12, 0.70);
-          border-bottom: 1px solid rgba(255,255,255,0.07);
-          -webkit-backdrop-filter: blur(24px);
-        "
-      >
+    <div class="relative z-10 flex min-h-dvh min-w-0 flex-1 flex-col pb-[4.5rem] lg:pb-0">
+      <header class="ui-header-bar">
         <div class="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 lg:px-7 lg:py-3.5">
-          <!-- Mobile logo -->
           <div class="flex items-center gap-2.5 lg:hidden">
-            <span
-              class="flex h-8 w-8 items-center justify-center rounded-lg bg-green-600 text-[10px] font-black text-white"
-              style="box-shadow: 0 2px 10px rgba(22,163,74,0.45)"
-            >
-              LP
-            </span>
-            <span class="text-sm font-bold tracking-tight text-white">LabourPro</span>
+            <img src="/logo.png" alt="LabourPro" class="h-8 w-8 shrink-0 rounded-lg object-contain" />
+            <span class="text-sm font-bold tracking-tight text-gray-900">LabourPro</span>
           </div>
-          <!-- Desktop: page subtitle area -->
           <div class="hidden lg:flex lg:items-center lg:gap-3">
-            <p class="text-xs font-medium uppercase tracking-widest text-white/30">
+            <p class="text-xs font-medium uppercase tracking-widest text-gray-400">
               Labour Management System
             </p>
           </div>
-          <!-- Right: logout -->
-          <button
-            type="button"
-            class="rounded-lg px-3 py-1.5 text-xs font-semibold text-white/40 transition-colors hover:bg-white/[0.07] hover:text-white/80"
-            @click="logout"
-          >
-            Sign out
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              v-if="showInstallButton"
+              type="button"
+              class="rounded-lg bg-violet-700 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-violet-600"
+              @click="triggerInstall"
+            >
+              Install
+            </button>
+            <button
+              type="button"
+              class="rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+              @click="logout"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </header>
 
-      <!-- Page content -->
       <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-5 lg:px-7 lg:py-7">
         <slot />
       </main>
 
-      <!-- ── Mobile bottom nav — glassmorphism ───────────── -->
+      <!-- Mobile bottom nav -->
       <nav
-        class="fixed bottom-0 left-0 right-0 z-30 lg:hidden"
-        style="
-          background: rgba(5, 16, 9, 0.82);
-          border-top: 1px solid rgba(255,255,255,0.09);
-          backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
-          padding-bottom: env(safe-area-inset-bottom, 0);
-        "
+        class="fixed bottom-0 left-0 right-0 z-30 border-t border-[#e9e4f5] bg-white/95 backdrop-blur-md lg:hidden"
+        style="padding-bottom: env(safe-area-inset-bottom, 0)"
       >
         <div class="mx-auto grid max-w-lg gap-px px-2 py-2" :class="bottomNavClass">
           <NuxtLink
@@ -132,21 +86,39 @@
             :key="item.to"
             :to="item.to"
             class="flex flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-[10px] font-semibold uppercase tracking-wide transition-all"
-            :class="isActive(item) ? 'text-green-400 bg-green-500/10' : 'text-white/35'"
+            :class="
+              isActive(item)
+                ? 'bg-violet-50 text-violet-700'
+                : 'text-gray-400 hover:text-gray-600'
+            "
           >
-            <AppNavIcon :name="item.icon" class="h-5 w-5" />
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+              :class="isActive(item) ? 'bg-violet-100 text-violet-700' : ''"
+            >
+              <AppNavIcon :name="item.icon" class="h-5 w-5" />
+            </span>
             {{ item.shortLabel }}
           </NuxtLink>
         </div>
       </nav>
     </div>
+
+    <PwaInstallPrompt in-app-layout />
   </div>
 </template>
 
 <script setup lang="ts">
 const { items, bottomNavClass, isActive } = useAppNav()
+const { showPrompt, canNativeInstall, install } = usePwaInstall()
 const auth = useAuthStore()
 const router = useRouter()
+
+const showInstallButton = computed(() => showPrompt.value && canNativeInstall.value)
+
+async function triggerInstall() {
+  await install()
+}
 
 async function logout() {
   auth.clear()

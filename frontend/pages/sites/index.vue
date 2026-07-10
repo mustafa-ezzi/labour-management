@@ -11,25 +11,32 @@
       :to="resumePath"
       class="ui-card-hover mb-5 block px-4 py-3"
     >
-      <p class="text-xs font-semibold uppercase tracking-widest text-green-400/80 lg:text-green-700">Continue</p>
-      <p class="mt-1 text-sm font-medium text-white lg:text-gray-900">Open last active site →</p>
+      <p class="text-xs font-semibold uppercase tracking-widest text-violet-700">Continue</p>
+      <p class="mt-1 text-sm font-medium text-gray-900">Open last active site →</p>
     </NuxtLink>
 
     <p v-if="pending" class="ui-muted">Loading…</p>
-    <p v-else-if="error" class="text-red-400">{{ error }}</p>
-    <ul v-else-if="sites.length" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <p v-else-if="error" class="text-red-600">{{ error }}</p>
+    <ul v-else-if="sites.length" class="overflow-hidden rounded-xl border border-gray-200 bg-white">
       <li v-for="s in sites" :key="s.id">
-        <NuxtLink :to="`/sites/${s.id}`" class="ui-card-hover block h-full">
-          <p class="font-medium text-white lg:text-gray-900">{{ s.name }}</p>
-          <p v-if="s.location" class="ui-muted mt-1 truncate">{{ s.location }}</p>
-          <p class="mt-2 text-xs text-white/35 lg:text-gray-400">{{ s.from_date }} → {{ s.to_date }}</p>
-          <p class="mt-1 text-xs font-medium text-green-400/70 lg:text-green-700">{{ s.total_work_days }} calendar days</p>
-          <p class="mt-2 text-[10px] font-semibold uppercase text-white/30 lg:text-gray-400">Open site workspace →</p>
+        <NuxtLink :to="`/sites/${s.id}`" class="ui-list-row">
+          <span class="ui-icon-chip h-9 w-9">
+            <AppNavIcon name="site" class="h-4 w-4" />
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-gray-900">{{ s.name }}</p>
+            <p v-if="s.location" class="ui-muted mt-0.5 truncate text-xs">{{ s.location }}</p>
+            <p class="mt-0.5 text-xs text-gray-400">{{ s.from_date }} → {{ s.to_date }}</p>
+          </div>
+          <div class="shrink-0 text-right">
+            <p class="text-[10px] uppercase tracking-wide text-gray-400">Days</p>
+            <p class="text-sm font-bold text-violet-700">{{ s.total_work_days }}</p>
+          </div>
         </NuxtLink>
       </li>
     </ul>
     <UiCard v-else class="text-center">
-      <p class="text-white/70">No sites yet</p>
+      <p class="text-gray-600">No sites yet</p>
       <p class="ui-muted mt-1">Create your first site to add crew and attendance.</p>
       <NuxtLink to="/sites/new" class="ui-btn-primary mt-4 inline-flex">Add site</NuxtLink>
     </UiCard>

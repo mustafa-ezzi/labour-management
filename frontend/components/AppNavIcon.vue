@@ -75,6 +75,32 @@
     />
   </svg>
   <svg
+    v-else-if="name === 'wages'"
+    :class="iconClass"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    stroke-width="1.75"
+    aria-hidden="true"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M3 10h18M5 6h14a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2zm7 7a2 2 0 100-4 2 2 0 000 4z"
+    />
+  </svg>
+  <svg
+    v-else-if="name === 'chevron-down'"
+    :class="iconClass"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    stroke-width="2"
+    aria-hidden="true"
+  >
+    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+  </svg>
+  <svg
     v-else-if="name === 'log'"
     :class="iconClass"
     fill="none"
