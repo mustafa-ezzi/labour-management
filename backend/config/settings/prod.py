@@ -26,6 +26,11 @@ ALLOWED_HOSTS = _split_env_list(os.environ.get("ALLOWED_HOSTS", ""))
 if not ALLOWED_HOSTS:
     raise ValueError("ALLOWED_HOSTS must be set in production (comma-separated domains).")
 
+# Railway health checks send Host: healthcheck.railway.app — whitelist automatically.
+_railway_health_host = "healthcheck.railway.app"
+if _railway_health_host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_railway_health_host)
+
 DATABASES = get_database_config(required=True)
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
