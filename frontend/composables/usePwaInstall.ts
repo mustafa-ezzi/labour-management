@@ -18,19 +18,33 @@ function detectIos(): boolean {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent)
 }
 
+function detectMobile(): boolean {
+  if (!import.meta.client) return false
+  return (
+    /android|iphone|ipad|ipod|mobile/i.test(window.navigator.userAgent) ||
+    window.matchMedia('(max-width: 1023px)').matches
+  )
+}
+
 export function usePwaInstall() {
   const deferredPrompt = useState<BeforeInstallPromptEvent | null>('pwa-deferred-prompt', () => null)
   const dismissed = useState('pwa-install-dismissed', () => false)
   const isInstalled = useState('pwa-is-installed', () => false)
   const isIos = useState('pwa-is-ios', () => false)
+  const isMobile = useState('pwa-is-mobile', () => false)
+  const modalOpen = useState('pwa-modal-open', () => false)
+  const installing = useState('pwa-installing', () => false)
 
   const canNativeInstall = computed(() => !!deferredPrompt.value)
-  const showPrompt = computed(() => {
+  const showDownloadPopup = computed(() => {
     if (!import.meta.client) return false
     if (isInstalled.value) return false
     if (dismissed.value) return false
-    return canNativeInstall.value || isIos.value
+    return isMobile.value
   })
+
+  /** @deprecated use showDownloadPopup */
+  const showPrompt = showDownloadPopup
 
   function init() {
     if (!import.meta.client || (window as Window & { __pwaInit?: boolean }).__pwaInit) return
@@ -38,6 +52,7 @@ export function usePwaInstall() {
 
     isInstalled.value = detectStandalone()
     isIos.value = detectIos() && !isInstalled.value
+    isMobile.value = detectMobile() && !isInstalled.value
     dismissed.value = localStorage.getItem(DISMISS_KEY) === '1'
 
     window.addEventListener('beforeinstallprompt', (event) => {
@@ -48,23 +63,45 @@ export function usePwaInstall() {
     window.addEventListener('appinstalled', () => {
       isInstalled.value = true
       deferredPrompt.value = null
+      modalOpen.value = false
+      installing.value = false
     })
   }
 
+  function openModal() {
+    if (!isInstalled.value) modalOpen.value = true
+  }
+
+  function closeModal() {
+    modalOpen.value = false
+  }
+
   async function install(): Promise<boolean> {
-    if (!deferredPrompt.value) return false
-    await deferredPrompt.value.prompt()
-    const { outcome } = await deferredPrompt.value.userChoice
-    deferredPrompt.value = null
-    if (outcome === 'accepted') {
-      isInstalled.value = true
-      return true
+    if (isIos.value) {
+      return false
     }
-    return false
+    if (!deferredPrompt.value) {
+      return false
+    }
+    installing.value = true
+    try {
+      await deferredPrompt.value.prompt()
+      const { outcome } = await deferredPrompt.value.userChoice
+      deferredPrompt.value = null
+      if (outcome === 'accepted') {
+        isInstalled.value = true
+        modalOpen.value = false
+        return true
+      }
+      return false
+    } finally {
+      installing.value = false
+    }
   }
 
   function dismiss() {
     dismissed.value = true
+    modalOpen.value = false
     if (import.meta.client) {
       localStorage.setItem(DISMISS_KEY, '1')
     }
@@ -72,10 +109,16 @@ export function usePwaInstall() {
 
   return {
     canNativeInstall,
+    showDownloadPopup,
     showPrompt,
     isInstalled,
     isIos,
+    isMobile,
+    modalOpen,
+    installing,
     init,
+    openModal,
+    closeModal,
     install,
     dismiss,
   }

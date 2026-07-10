@@ -58,7 +58,7 @@
               class="rounded-lg bg-violet-700 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-violet-600"
               @click="triggerInstall"
             >
-              Install
+              Download
             </button>
             <button
               type="button"
@@ -103,21 +103,19 @@
         </div>
       </nav>
     </div>
-
-    <PwaInstallPrompt in-app-layout />
   </div>
 </template>
 
 <script setup lang="ts">
 const { items, bottomNavClass, isActive } = useAppNav()
-const { showPrompt, canNativeInstall, install } = usePwaInstall()
+const { showDownloadPopup, openModal } = usePwaInstall()
 const auth = useAuthStore()
 const router = useRouter()
 
-const showInstallButton = computed(() => showPrompt.value && canNativeInstall.value)
+const showInstallButton = computed(() => showDownloadPopup.value)
 
-async function triggerInstall() {
-  await install()
+function triggerInstall() {
+  openModal()
 }
 
 async function logout() {

@@ -46,8 +46,6 @@
         <slot />
       </div>
     </main>
-
-    <PwaInstallPrompt />
   </div>
 </template>
 

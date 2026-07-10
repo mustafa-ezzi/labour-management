@@ -22,10 +22,10 @@
           <img src="/logo.png" alt="LabourPro" class="h-12 w-12 shrink-0 rounded-lg object-contain" />
           <div class="min-w-0 flex-1">
             <p class="text-sm font-bold text-gray-900">Install LabourPro on your phone</p>
-            <p class="mt-0.5 text-xs text-gray-600">One tap access from your home screen.</p>
+            <p class="mt-0.5 text-xs text-gray-600">Tap to open the download popup.</p>
           </div>
           <button type="button" class="ui-btn-primary shrink-0 py-2 text-xs" @click="triggerInstall">
-            Install
+            Download
           </button>
         </div>
       </div>
@@ -68,14 +68,12 @@ const pending = ref(true)
 const err = ref('')
 
 const lastSiteLink = useResumeSitePath()
-const { showPrompt, canNativeInstall, isIos, install } = usePwaInstall()
+const { showDownloadPopup, openModal } = usePwaInstall()
 
-const showInstallCard = computed(() => showPrompt.value && (canNativeInstall.value || isIos.value))
+const showInstallCard = computed(() => showDownloadPopup.value)
 
-async function triggerInstall() {
-  if (canNativeInstall.value) {
-    await install()
-  }
+function triggerInstall() {
+  openModal()
 }
 
 onMounted(async () => {
