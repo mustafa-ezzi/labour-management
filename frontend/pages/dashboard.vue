@@ -25,7 +25,7 @@
             <p class="mt-0.5 text-xs text-gray-600">One tap — adds the app to your home screen.</p>
           </div>
           <button type="button" class="ui-btn-primary shrink-0 py-2 text-xs" @click="triggerInstall">
-            Install
+            Download
           </button>
         </div>
       </div>

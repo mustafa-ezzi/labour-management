@@ -53,12 +53,12 @@
           </div>
           <div class="flex items-center gap-2">
             <button
-              v-if="showInstallButton"
+              v-if="showDownloadPopup"
               type="button"
               class="rounded-lg bg-violet-700 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-violet-600"
               @click="triggerInstall"
             >
-              Install
+              Download
             </button>
             <button
               type="button"
@@ -111,8 +111,6 @@ const { items, bottomNavClass, isActive } = useAppNav()
 const { showDownloadPopup, canNativeInstall, install, openModal } = usePwaInstall()
 const auth = useAuthStore()
 const router = useRouter()
-
-const showInstallButton = computed(() => showDownloadPopup.value && canNativeInstall.value)
 
 function triggerInstall() {
   if (canNativeInstall.value) {

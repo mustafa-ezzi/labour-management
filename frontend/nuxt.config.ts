@@ -69,7 +69,8 @@ export default defineNuxtConfig({
       cleanupOutdatedCaches: true,
     },
     client: {
-      installPrompt: true,
+      // Let our usePwaInstall capture beforeinstallprompt for one-tap install.
+      installPrompt: false,
     },
     devOptions: {
       enabled: true,
