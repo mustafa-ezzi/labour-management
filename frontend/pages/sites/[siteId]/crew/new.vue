@@ -1,6 +1,5 @@
 <template>
   <div>
-    <NuxtLink :to="`/sites/${siteId}/crew`" class="ui-link mb-4 inline-block">← Workers</NuxtLink>
     <h1 class="mb-5 text-xl font-bold text-gray-900">Add worker</h1>
     <form class="space-y-4" @submit.prevent="submit">
       <div>

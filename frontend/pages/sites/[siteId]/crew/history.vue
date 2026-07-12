@@ -1,6 +1,5 @@
 <template>
   <div>
-    <NuxtLink :to="`/sites/${siteId}/crew`" class="ui-link mb-4 inline-block">← Workers</NuxtLink>
     <UiPageHeader title="Attendance history" subtitle="See which days a worker was present" />
 
     <UiCard class="mb-5">

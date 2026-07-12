@@ -1,6 +1,5 @@
 <template>
   <div>
-    <NuxtLink :to="`/sites/${siteId}/materials`" class="ui-link mb-4 inline-block">← Materials</NuxtLink>
     <UiPageHeader title="Log usage" subtitle="Daily consumption — amounts calculated automatically" />
 
     <div class="lg:grid lg:grid-cols-12 lg:gap-8">

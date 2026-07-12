@@ -1,8 +1,5 @@
 <template>
   <div>
-    <NuxtLink :to="`/sites/${route.params.siteId}/crew/${route.params.labourId}`" class="ui-link mb-4 inline-block">
-      ← Worker
-    </NuxtLink>
     <h1 class="mb-1 text-xl font-bold text-gray-900">Payments</h1>
     <p v-if="labourName" class="ui-muted mb-5">{{ labourName }} · pending {{ pending }}</p>
 

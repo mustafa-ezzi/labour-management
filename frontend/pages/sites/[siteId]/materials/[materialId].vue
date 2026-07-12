@@ -1,9 +1,5 @@
 <template>
   <div>
-    <NuxtLink :to="`/sites/${route.params.siteId}/materials`" class="ui-link mb-4 inline-block">
-      ← Materials
-    </NuxtLink>
-
     <p v-if="loading" class="ui-muted">Loading…</p>
     <p v-else-if="loadErr" class="text-red-600">{{ loadErr }}</p>
     <template v-else-if="material">

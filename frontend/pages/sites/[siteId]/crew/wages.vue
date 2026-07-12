@@ -1,6 +1,5 @@
 <template>
   <div>
-    <NuxtLink :to="`/sites/${siteId}/crew`" class="ui-link mb-4 inline-block">← Workers</NuxtLink>
     <UiPageHeader title="Daily Wages" subtitle="Wage of the day + amount paid — pending is calculated for you">
       <template v-if="rows.length" #action>
         <button type="button" class="ui-btn-secondary text-xs sm:text-sm" @click="fillPaidEqualsWage">

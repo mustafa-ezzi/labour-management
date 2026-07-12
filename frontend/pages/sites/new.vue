@@ -1,8 +1,15 @@
 <template>
   <div class="lg:max-w-xl">
-    <p class="mb-4">
-      <NuxtLink to="/sites" class="ui-link">← Sites</NuxtLink>
-    </p>
+    <button
+      type="button"
+      class="mb-4 flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+      aria-label="Go back"
+      @click="goBack"
+    >
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+      </svg>
+    </button>
     <UiPageHeader title="New site" subtitle="Add a construction site to manage crew and materials" />
     <form class="ui-card space-y-4" @submit.prevent="submit">
       <div>
@@ -29,6 +36,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'app', middleware: 'auth' })
 
+const { goBack } = useSmartBack()
 const name = ref('')
 const location = ref('')
 const startDate = ref(new Date().toISOString().slice(0, 10))

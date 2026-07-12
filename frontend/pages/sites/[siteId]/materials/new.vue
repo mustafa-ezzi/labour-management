@@ -1,6 +1,5 @@
 <template>
   <div>
-    <NuxtLink :to="`/sites/${siteId}/materials`" class="ui-link mb-4 inline-block">← Materials</NuxtLink>
     <h1 class="mb-5 text-xl font-bold text-gray-900">Add material</h1>
     <UiCard>
       <form class="space-y-4" @submit.prevent="submit">

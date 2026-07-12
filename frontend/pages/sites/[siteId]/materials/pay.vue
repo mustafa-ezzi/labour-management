@@ -1,6 +1,5 @@
 <template>
   <div>
-    <NuxtLink :to="`/sites/${siteId}/materials`" class="ui-link mb-4 inline-block">← Materials</NuxtLink>
     <UiPageHeader title="Pay materials" subtitle="Settle pending costs from usage logs">
       <template v-if="rows.length" #action>
         <button
