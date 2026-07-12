@@ -3,6 +3,12 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
+type PwaWindow = Window & {
+  __pwaInit?: boolean
+  __bip?: BeforeInstallPromptEvent | null
+  __bipListener?: boolean
+}
+
 const DISMISS_UNTIL_KEY = 'labourpro-pwa-dismiss-until'
 const OLD_DISMISS_KEY = 'labourpro-pwa-install-dismissed'
 const DISMISS_DAYS = 3
@@ -35,13 +41,25 @@ function detectMobile(): boolean {
 
 function readDismissed(): boolean {
   if (!import.meta.client) return false
-  // Clear old permanent dismiss so the new Download popup can appear again.
   if (localStorage.getItem(OLD_DISMISS_KEY) === '1') {
     localStorage.removeItem(OLD_DISMISS_KEY)
   }
   const until = localStorage.getItem(DISMISS_UNTIL_KEY)
   if (until && Date.now() < Number(until)) return true
   return false
+}
+
+/** Capture beforeinstallprompt as early as possible (before Vue hydrates). */
+export function captureInstallPromptEarly() {
+  if (!import.meta.client) return
+  const w = window as PwaWindow
+  if (w.__bipListener) return
+  w.__bipListener = true
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault()
+    w.__bip = event as BeforeInstallPromptEvent
+    window.dispatchEvent(new CustomEvent('labourpro:bip'))
+  })
 }
 
 export function usePwaInstall() {
@@ -55,32 +73,42 @@ export function usePwaInstall() {
   const installing = useState('pwa-installing', () => false)
   const installReady = useState('pwa-install-ready', () => false)
   const bannerVisible = useState('pwa-banner-visible', () => false)
+  /** True after we stop waiting for Chrome's install event. */
+  const promptTimedOut = useState('pwa-prompt-timed-out', () => false)
 
   const canNativeInstall = computed(() => !!deferredPrompt.value)
 
-  /** Show popup / Download controls on mobile when not already installed. */
   const showDownloadPopup = computed(() => {
     if (!import.meta.client) return false
     if (isInstalled.value) return false
     return isMobile.value
   })
 
-  /** Soft-dismissed for a few days — still allow header Download button. */
   const showAutoPopup = computed(() => showDownloadPopup.value && !dismissed.value)
-
-  /** @deprecated use showDownloadPopup */
   const showPrompt = showDownloadPopup
+
+  function adoptPrompt(event: BeforeInstallPromptEvent | null | undefined) {
+    if (!event) return
+    deferredPrompt.value = event
+    installReady.value = true
+    promptTimedOut.value = false
+  }
 
   function onInstallPrompt(event: Event) {
     event.preventDefault()
-    deferredPrompt.value = event as BeforeInstallPromptEvent
-    installReady.value = true
-    // If the download popup is already open, user can tap Install immediately.
+    adoptPrompt(event as BeforeInstallPromptEvent)
+  }
+
+  function syncFromWindow() {
+    const w = window as PwaWindow
+    if (w.__bip) adoptPrompt(w.__bip)
   }
 
   function init() {
-    if (!import.meta.client || (window as Window & { __pwaInit?: boolean }).__pwaInit) return
-    ;(window as Window & { __pwaInit?: boolean }).__pwaInit = true
+    if (!import.meta.client || (window as PwaWindow).__pwaInit) return
+    ;(window as PwaWindow).__pwaInit = true
+
+    captureInstallPromptEarly()
 
     isInstalled.value = detectStandalone()
     isIos.value = detectIos() && !isInstalled.value
@@ -89,10 +117,13 @@ export function usePwaInstall() {
     dismissed.value = readDismissed()
 
     window.addEventListener('beforeinstallprompt', onInstallPrompt)
+    window.addEventListener('labourpro:bip', () => syncFromWindow())
+    syncFromWindow()
 
     window.addEventListener('appinstalled', () => {
       isInstalled.value = true
       deferredPrompt.value = null
+      ;(window as PwaWindow).__bip = null
       installReady.value = false
       modalOpen.value = false
       installing.value = false
@@ -101,7 +132,11 @@ export function usePwaInstall() {
       localStorage.removeItem(OLD_DISMISS_KEY)
     })
 
-    // Always offer Download on mobile (popup + sticky banner).
+    // Don't leave "Preparing…" forever — after 2.5s show manual install.
+    window.setTimeout(() => {
+      if (!deferredPrompt.value) promptTimedOut.value = true
+    }, 2500)
+
     if (isMobile.value && !isInstalled.value) {
       bannerVisible.value = true
       if (!dismissed.value) {
@@ -111,19 +146,19 @@ export function usePwaInstall() {
   }
 
   function openModal() {
-    if (!isInstalled.value) modalOpen.value = true
+    if (!isInstalled.value) {
+      syncFromWindow()
+      modalOpen.value = true
+    }
   }
 
   function closeModal() {
     modalOpen.value = false
   }
 
-  /**
-   * One-tap native install (Android Chrome / Edge / Samsung Internet).
-   * prompt() must run from the user click — do not await before calling it.
-   */
   function install(): Promise<boolean> {
-    const event = deferredPrompt.value
+    syncFromWindow()
+    const event = deferredPrompt.value || (window as PwaWindow).__bip || null
     if (!event) return Promise.resolve(false)
 
     installing.value = true
@@ -132,6 +167,7 @@ export function usePwaInstall() {
     return event.userChoice
       .then(({ outcome }) => {
         deferredPrompt.value = null
+        ;(window as PwaWindow).__bip = null
         installReady.value = false
         if (outcome === 'accepted') {
           isInstalled.value = true
@@ -173,6 +209,7 @@ export function usePwaInstall() {
     installing,
     installReady,
     bannerVisible,
+    promptTimedOut,
     init,
     openModal,
     closeModal,

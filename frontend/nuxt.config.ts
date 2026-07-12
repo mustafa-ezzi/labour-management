@@ -24,13 +24,14 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/png', href: '/logo.png' },
-        { rel: 'apple-touch-icon', href: '/logo.png' },
+        { rel: 'apple-touch-icon', href: '/pwa-192.png' },
       ],
+      script: [{ key: 'pwa-bip-capture', src: '/pwa-capture.js', tagPosition: 'head' }],
     },
   },
   pwa: {
     registerType: 'autoUpdate',
-    includeAssets: ['logo.png'],
+    includeAssets: ['logo.png', 'pwa-192.png', 'pwa-512.png'],
     manifest: {
       name: 'LabourPro — Labour Management',
       short_name: 'LabourPro',
@@ -40,23 +41,23 @@ export default defineNuxtConfig({
       display: 'standalone',
       orientation: 'portrait-primary',
       scope: '/',
-      start_url: '/dashboard',
+      start_url: '/',
       id: '/',
       icons: [
         {
-          src: '/logo.png',
+          src: '/pwa-192.png',
           sizes: '192x192',
           type: 'image/png',
           purpose: 'any',
         },
         {
-          src: '/logo.png',
+          src: '/pwa-512.png',
           sizes: '512x512',
           type: 'image/png',
           purpose: 'any',
         },
         {
-          src: '/logo.png',
+          src: '/pwa-512.png',
           sizes: '512x512',
           type: 'image/png',
           purpose: 'maskable',
@@ -69,7 +70,6 @@ export default defineNuxtConfig({
       cleanupOutdatedCaches: true,
     },
     client: {
-      // Let our usePwaInstall capture beforeinstallprompt for one-tap install.
       installPrompt: false,
     },
     devOptions: {
