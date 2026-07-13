@@ -20,7 +20,21 @@ export function createApiClient(): AxiosInstance {
     (res) => res,
     async (error) => {
       const original = error.config
-      if (error.response?.status === 401 && auth.refreshToken && !original._retry) {
+      const status = error.response?.status
+      const detail = String(error.response?.data?.detail || '')
+
+      if (
+        import.meta.client &&
+        status === 403 &&
+        /disabled|subscription|plan ended|expired/i.test(detail)
+      ) {
+        const path = window.location.pathname
+        if (!path.startsWith('/subscription-ended') && !path.startsWith('/login')) {
+          await navigateTo('/subscription-ended')
+        }
+      }
+
+      if (status === 401 && auth.refreshToken && !original._retry) {
         original._retry = true
         try {
           const { data } = await axios.post(`${config.public.apiBase}/auth/refresh/`, {

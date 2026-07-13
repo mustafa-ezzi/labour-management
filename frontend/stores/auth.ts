@@ -4,6 +4,7 @@ import {
   readAuthFromStorage,
   writeAuthToStorage,
 } from '~/utils/auth-storage'
+import { tokenIsAppAdmin } from '~/utils/jwt'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -12,6 +13,7 @@ export const useAuthStore = defineStore('auth', {
   }),
   getters: {
     isLoggedIn: (s) => Boolean(s.accessToken),
+    isAppAdmin: (s) => tokenIsAppAdmin(s.accessToken),
   },
   actions: {
     hydrateFromStorage() {

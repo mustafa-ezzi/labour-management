@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from apps.api.permissions import IsAuthenticatedCompanyMember, user_company_ids
+from apps.api.permissions import IsAuthenticatedCompanyMember, is_app_admin, user_company_ids
 from apps.api.serializers import (
     AttendanceSerializer,
     BulkAttendanceSerializer,
@@ -53,32 +53,46 @@ class LabourTokenObtainPairView(TokenObtainPairView):
 
 
 class MeView(APIView):
-    permission_classes = [IsAuthenticated, IsAuthenticatedCompanyMember]
+    """Current user profile. App Admin may have no company membership."""
+
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        if not request.user.is_active:
+            return Response(
+                {"detail": "This account has been disabled."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        admin = is_app_admin(request.user)
+        payload = {
+            "user": {
+                "id": str(request.user.id),
+                "email": request.user.email,
+                "first_name": request.user.first_name,
+                "last_name": request.user.last_name,
+                "is_app_admin": admin,
+                "is_active": request.user.is_active,
+            },
+            "company": None,
+        }
+
         membership = (
             request.user.company_memberships.select_related("company")
             .order_by("created_at")
             .first()
         )
-        if not membership:
-            return Response({"detail": "No company membership."}, status=400)
-        c = membership.company
-        return Response(
-            {
-                "user": {
-                    "id": str(request.user.id),
-                    "email": request.user.email,
-                    "first_name": request.user.first_name,
-                    "last_name": request.user.last_name,
-                },
-                "company": {
-                    "id": str(c.id),
-                    "name": c.name,
-                    "role": membership.role,
-                },
+        if membership:
+            c = membership.company
+            payload["company"] = {
+                "id": str(c.id),
+                "name": c.name,
+                "role": membership.role,
             }
-        )
+        elif not admin:
+            return Response({"detail": "No company membership."}, status=400)
+
+        return Response(payload)
 
 
 class SiteViewSet(viewsets.ModelViewSet):

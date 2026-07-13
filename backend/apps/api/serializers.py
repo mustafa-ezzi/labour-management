@@ -51,6 +51,7 @@ class LabourTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
+        token["is_app_admin"] = bool(user.is_superuser and user.is_active)
         membership = (
             user.company_memberships.select_related("company").order_by("created_at").first()
         )
@@ -58,6 +59,20 @@ class LabourTokenObtainPairSerializer(TokenObtainPairSerializer):
             token["company_id"] = str(membership.company_id)
             token["role"] = membership.role
         return token
+
+    def validate(self, attrs):
+        email = (attrs.get(self.username_field) or "").strip().lower()
+        if email:
+            attrs[self.username_field] = email
+            existing = User.objects.filter(email__iexact=email).first()
+            if existing and not existing.is_active:
+                from rest_framework_simplejwt.exceptions import AuthenticationFailed
+
+                raise AuthenticationFailed(
+                    "This account has been disabled. Contact LabourPro support.",
+                    code="user_disabled",
+                )
+        return super().validate(attrs)
 
 
 class SiteSerializer(serializers.ModelSerializer):

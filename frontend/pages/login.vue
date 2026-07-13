@@ -60,7 +60,7 @@ const router = useRouter()
 onMounted(() => {
   auth.hydrateFromStorage()
   if (auth.isLoggedIn || hasStoredAuth()) {
-    router.replace('/dashboard')
+    router.replace(auth.isAppAdmin ? '/admin' : '/dashboard')
   }
 })
 
@@ -74,9 +74,16 @@ async function submit() {
       password: password.value,
     })
     auth.setTokens(data.access, data.refresh)
-    await router.push('/dashboard')
-  } catch {
-    error.value = 'Invalid email or password.'
+    await router.push(auth.isAppAdmin ? '/admin' : '/dashboard')
+  } catch (e: unknown) {
+    const detail =
+      e && typeof e === 'object' && 'response' in e
+        ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+        : null
+    error.value =
+      typeof detail === 'string' && detail.toLowerCase().includes('disabled')
+        ? detail
+        : 'Invalid email or password.'
   } finally {
     loading.value = false
   }

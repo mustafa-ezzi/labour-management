@@ -1,0 +1,425 @@
+# LabourPro — Admin + Subscription + Support Roadmap
+
+Execution checklist for a full **app admin panel** (LabourPro staff only), **user subscription UX**, and **support messaging**.  
+Check boxes as each task is completed. Do not skip phases that later work depends on.
+
+---
+
+## Core rule (roles)
+
+There are only **two kinds of people** in the system:
+
+| Role | Who | Access |
+|------|-----|--------|
+| **Admin** | LabourPro staff — **admin of the whole app** | `/admin/**` panel: manage all users, subscriptions, support |
+| **User** | Everyone else (customers / company accounts) | Normal app: sites, crew, wages, materials + subscription + support |
+
+**Important**
+
+- There is **no other admin type** (no company admin, no site admin, no multi-admin hierarchy).
+- Inside a company, people are just **users** of that company — not admins of the platform.
+- The Admin controls the entire product; Users never see or call admin APIs.
+
+---
+
+## How to use this file
+
+- Mark a task done: change `- [ ]` → `- [x]`
+- Keep notes under a task if scope changes
+- Prefer shipping **Phase 0 → 1 → 2…** in order (auth & roles unlock everything else)
+
+---
+
+## Phase 0 — Product decisions (before coding)
+
+> **Status: COMPLETE** — decisions locked below. Proceed to Phase 1.
+
+- [x] Confirm role model: **one Admin (whole app)** vs **Users only** — no other admin roles
+- [x] Decide how the single Admin account is bootstrapped (e.g. `is_staff` / `is_superuser` / `is_app_admin` flag)
+- [x] Decide subscription unit: bill per **company** (recommended) or per user
+- [x] Decide plans: e.g. Free trial / Monthly / Yearly (names, prices, duration)
+- [x] Decide payment flow for v1: **manual renew by Admin** only, or online payment gateway later
+- [x] Decide soft-disable vs hard-delete rules and recovery window (e.g. 14 days soft-delete)
+- [x] Decide support channels: in-app tickets only for v1 (email later optional)
+- [x] Sketch **Admin** IA: Dashboard, Users/Accounts, Subscriptions, Support, Settings
+- [x] Sketch **User** IA: Subscription status page, Support page, existing site/crew flows unchanged
+
+### Locked decisions
+
+#### 1. Role model
+- **Admin** = LabourPro staff only — sole controller of the whole app (`/admin/**`).
+- **User** = everyone else (company accounts). No company-admin / site-admin / multi-admin roles.
+- Company membership roles (`owner`, `manager`, etc.) stay for **in-company permissions only** — they are **not** platform admins.
+
+#### 2. Admin bootstrap
+- Use Django flags already on `User`: **`is_staff=True` + `is_superuser=True`** identifies the App Admin.
+- Create via `python manage.py createsuperuser` (email + password).
+- Gate admin APIs/UI with `IsAppAdmin` = `user.is_authenticated and user.is_superuser`.
+- Do **not** add a separate `is_app_admin` column in v1 (avoids dual sources of truth). Revisit only if we need staff who are not full superusers.
+
+#### 3. Subscription unit
+- Bill / attach subscription to the **Company** (one subscription per company).
+- All users under that company share the same plan status and end date.
+- Matches existing `Company.subscription_plan` field (will be replaced/extended by a proper `Subscription` model in Phase 3).
+
+#### 4. Plans (v1)
+| Plan key   | Name          | Duration     | Notes                                      |
+|------------|---------------|--------------|--------------------------------------------|
+| `trial`    | Free trial    | **14 days**  | Auto-assigned on new company registration  |
+| `monthly`  | Monthly       | **30 days**  | Default paid plan                          |
+| `yearly`   | Yearly        | **365 days** | Optional; Admin can assign                 |
+
+- Prices: store on `Plan` model but **v1 has no online checkout** — Admin sets/renews manually after payment outside the app (bank/JazzCash/etc.).
+- Placeholder prices can be documented in admin (e.g. PKR amounts) without charging in-app.
+
+#### 5. Payment flow (v1)
+- **Manual renew by Admin only** — no Stripe/JazzCash gateway in v1.
+- User sees plan + end date + “Contact support / pay to renew” messaging.
+- Optional: User can open a support ticket or “renew request”; Admin marks paid via **Renew** action.
+- Online payments = Phase 3b / Milestone E (parked).
+
+#### 6. Disable vs delete
+| Action   | Effect | Reversible? |
+|----------|--------|-------------|
+| **Disable** | User cannot log in; company treated as inactive; data kept | **Yes** (Enable) |
+| **Delete**  | Hard-delete company + all related sites/crew/attendance/materials/payments/memberships/user(s) as scoped | **No** |
+
+- No soft-delete recovery window in v1 (keeps scope small). Disable is the reversible path.
+- Delete requires typed confirmation (company name or `DELETE`) and an audit log entry.
+- Do not allow Admin to delete their own Admin account.
+
+#### 7. Support channels (v1)
+- **In-app tickets only** (User ↔ Admin).
+- No email/WhatsApp/SMS in v1 (optional later).
+- Ticket statuses: `open` → `pending` → `resolved` → `closed`.
+
+#### 8. Admin information architecture
+
+```
+/admin
+├── Dashboard          KPIs: users, companies, active/expired subs, open tickets
+├── Accounts           List → Detail (edit, disable/enable, delete)
+├── Subscriptions      List ending-soon / expired; Renew / Disable / set dates
+├── Plans              CRUD for trial / monthly / yearly
+├── Support            Inbox → Ticket thread + company/sub sidebar
+└── Audit (optional)   Recent Admin actions
+```
+
+- Desktop-first Admin UI is OK for v1; mobile-usable tables preferred if cheap.
+- Admin never uses the normal site/crew bottom nav as their primary home.
+
+#### 9. User information architecture
+
+```
+Existing app (unchanged core)
+├── Sites / Crew / Wages / Materials / History …
+
+New User pages
+├── Subscription       Plan name, status, end date, days left, renew guidance
+├── Support            Ticket list → New ticket → Thread
+└── (Gate)             Full-page when subscription expired / account disabled
+```
+
+- Soft banner when &lt; 7 days remaining.
+- Expired → block mutating work (or full redirect to subscription-ended page — enforce in Phase 3).
+- Support + Subscription entries in app nav / settings area (exact placement in Phase 4/6).
+
+### Phase 0 exit criteria
+
+- [x] All decisions above written and agreed for v1
+- [x] No code required for Phase 0 — ready for **Phase 1** (roles & `/admin` access control)
+
+---
+
+## Phase 1 — Roles, permissions & access control
+
+> **Status: COMPLETE** — App Admin access control, audit log, `/admin` shell.
+
+### Backend
+
+- [x] App Admin = Django `is_superuser` (no separate `is_app_admin` column; Phase 0)
+- [x] Do **not** invent company-level or site-level admin roles
+- [x] DRF permission: `IsAppAdmin` for all `/api/admin/*` routes
+- [x] Ensure **Users cannot** call any admin APIs
+- [x] Admin can access admin APIs without needing a company membership (`/api/admin/me/`, dashboard)
+- [x] Block login / API access for **disabled** user accounts (clear error message)
+- [x] Subscription-expired enforcement **deferred to Phase 3**; gate page stub + API 403 redirect hook added
+- [x] Audit log model (`AdminAuditLog`) + `/api/admin/audit/` list
+
+### Frontend
+
+- [x] Route guard: `/admin/**` only if current user is the App Admin (`middleware/admin.ts`)
+- [x] Separate Admin layout (nav: Dashboard, Accounts, Plans, Support, Audit)
+- [x] Never show Admin nav to normal Users
+- [x] User-facing gate page stub: `/subscription-ended` (full subscription UI in Phase 3)
+
+### Phase 1 API surface
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/admin/me/` | Admin identity |
+| GET | `/api/admin/dashboard/` | KPI shell |
+| GET | `/api/admin/audit/` | Recent audit rows |
+| GET | `/api/admin/gate/` | Permission probe |
+
+JWT claim: `is_app_admin` (true for active superusers).  
+Bootstrap Admin: `python manage.py createsuperuser`
+
+---
+
+## Phase 2 — Account management (Admin only)
+
+### Data model
+
+- [ ] User profile fields editable by Admin: name, email, phone (if any), status
+- [ ] Company fields editable by Admin: name, owner user, status
+- [ ] Account status enum: `active` | `disabled` | `pending_delete` (optional)
+- [ ] Document cascade map for delete (company-scoped data today):
+  - Company → Sites → Labour → Attendance → LabourPayments
+  - Company → Sites → Materials → MaterialUsage → MaterialPayments
+  - CompanyMemberships, owned company links
+  - Related auth tokens / sessions
+
+### Admin APIs
+
+- [ ] `GET /api/admin/accounts/` — list users/companies (search, filter by status/plan)
+- [ ] `GET /api/admin/accounts/:id/` — detail (user + company + subscription + usage counts)
+- [ ] `PATCH /api/admin/accounts/:id/` — update name, email, company name, etc.
+- [ ] `POST /api/admin/accounts/:id/disable/` — disable login + mark company inactive
+- [ ] `POST /api/admin/accounts/:id/enable/` — re-enable
+- [ ] `DELETE /api/admin/accounts/:id/` — **hard delete** all related data (transactional)
+- [ ] Soft-delete option (optional): anonymize + schedule purge job
+- [ ] Confirmation payload required for delete (type company name / “DELETE”)
+- [ ] Write audit entries for every disable / enable / update / delete
+
+### Admin UI
+
+- [ ] Accounts list: search, status badges, plan badge, last login
+- [ ] Account detail: profile edit form, company summary, counts (sites, workers, materials)
+- [ ] Actions: Disable, Enable, Delete (danger zone with confirm modal)
+- [ ] Toast / error handling for failed cascade deletes
+- [ ] Empty and loading states
+
+### Safety
+
+- [ ] Prevent Admin from deleting their own Admin account
+- [ ] DB transaction around hard delete; rollback on failure
+- [ ] Backup / export note before first production hard-delete feature goes live
+
+---
+
+## Phase 3 — Subscriptions & billing lifecycle
+
+### Data model
+
+- [ ] `Plan` model: name, price, currency, duration_days, features JSON (optional)
+- [ ] `Subscription` model (per company): plan, status (`trialing` | `active` | `past_due` | `expired` | `cancelled`), `starts_at`, `ends_at`, `renewed_at`, notes
+- [ ] Seed default plans (e.g. Monthly)
+- [ ] On new company registration: auto-create trial or default subscription
+- [ ] Migration for existing companies: assign trial/active plan with an end date
+
+### Admin APIs
+
+- [ ] `GET /api/admin/plans/` / `POST` / `PATCH` — manage plans
+- [ ] `GET /api/admin/subscriptions/` — list by status / ending soon
+- [ ] `POST /api/admin/subscriptions/:id/renew/` — extend `ends_at` by plan duration
+- [ ] `POST /api/admin/subscriptions/:id/disable/` — set cancelled/expired, block access
+- [ ] `POST /api/admin/subscriptions/:id/set-dates/` — manual start/end override
+- [ ] Filter: subscriptions ending in N days
+
+### User APIs
+
+- [ ] `GET /api/subscription/me/` — current plan, end date, days remaining, status
+- [ ] `GET /api/subscription/plans/` — plan list (for “pay / renew” info)
+- [ ] Optional v1: `POST /api/subscription/renew-request/` — asks Admin to renew (no payment gateway yet)
+
+### Admin UI
+
+- [ ] Plans CRUD page
+- [ ] Subscriptions list: ending soon, expired, active
+- [ ] Per-company: Renew, Disable, Change plan, Edit end date
+- [ ] Dashboard widgets: active subs, expiring this week, expired count
+
+### User UI
+
+- [ ] **Subscription** page: plan name, status, **end date**, days left, progress/reminder
+- [ ] Expired / disabled full-page: “Your plan ended — contact support or renew”
+- [ ] Soft banners in app when &lt; 7 days remaining
+- [ ] Nav entry: Subscription (and Support)
+
+### Enforcement
+
+- [ ] Cron / management command: mark expired subscriptions nightly
+- [ ] API middleware: reject mutating requests when expired (optional read-only)
+- [ ] Frontend middleware: redirect to subscription-ended page when expired
+
+### Payments (later / optional Phase 3b)
+
+- [ ] Choose gateway (Stripe / JazzCash / bank transfer manual)
+- [ ] PaymentIntent / checkout session OR “mark paid” Admin workflow
+- [ ] Payment history table linked to subscription renewals
+- [ ] Receipts / invoice PDF (optional)
+
+---
+
+## Phase 4 — Support messaging (User ↔ Admin)
+
+### Data model
+
+- [ ] `SupportTicket`: company, created_by (User), subject, status (`open` | `pending` | `resolved` | `closed`), priority, created_at, updated_at
+- [ ] `SupportMessage`: ticket, sender (User or Admin), body, attachments (optional later), created_at, `is_admin_reply`
+- [ ] Indexes for unread / open tickets
+
+### User APIs
+
+- [ ] `GET /api/support/tickets/` — my company’s tickets
+- [ ] `POST /api/support/tickets/` — create ticket + first message
+- [ ] `GET /api/support/tickets/:id/` — thread
+- [ ] `POST /api/support/tickets/:id/messages/` — reply
+
+### Admin APIs
+
+- [ ] `GET /api/admin/support/tickets/` — all tickets (filter status, company)
+- [ ] `GET /api/admin/support/tickets/:id/` — thread + company context
+- [ ] `POST /api/admin/support/tickets/:id/messages/` — Admin reply
+- [ ] `PATCH /api/admin/support/tickets/:id/` — change status / priority
+- [ ] Unread counts for Admin badge
+
+### User UI
+
+- [ ] Support tab / page: list tickets
+- [ ] New ticket form (subject + message)
+- [ ] Conversation thread view
+- [ ] Status badges
+
+### Admin UI
+
+- [ ] Support inbox (open first)
+- [ ] Ticket detail with company + subscription sidebar
+- [ ] Reply box + mark resolved / close
+- [ ] Optional: quick actions “renew plan” / “open account” from ticket
+
+### Notifications (optional)
+
+- [ ] In-app unread badge
+- [ ] Email notify Admin on new ticket
+- [ ] Email notify User on Admin reply
+
+---
+
+## Phase 5 — Admin dashboard & extra whole-app features
+
+- [ ] KPI cards: total companies, active users, active subs, MRR (if priced), open tickets
+- [ ] Charts: signups over time, expiring subscriptions
+- [ ] Recent audit log feed
+- [ ] Impersonate / “view as company” (read-only) — optional, high caution
+- [ ] Global search: company, user email, ticket id
+- [ ] Export CSV: accounts, subscriptions
+- [ ] Feature flags per company (optional)
+- [ ] Announcement banner for all Users (optional)
+- [ ] Rate limits on Admin delete / User support create
+
+---
+
+## Phase 6 — Frontend architecture (Admin panel + User app)
+
+- [ ] Same Nuxt app with `/admin` routes for Admin only (Users never enter)
+- [ ] Admin design system: tables, filters, confirm dialogs, danger zones
+- [ ] Mobile-friendly admin lists (or desktop-first Admin OK — decide)
+- [ ] User Subscription + Support pages match existing LabourPro purple/white theme
+- [ ] Empty states, skeletons, error banners
+- [ ] i18n not required for v1 unless needed
+
+---
+
+## Phase 7 — Testing, security & launch
+
+### Testing
+
+- [ ] Unit tests: cascade delete removes all company-linked rows
+- [ ] Unit tests: disabled user cannot authenticate
+- [ ] Unit tests: expired subscription enforcement
+- [ ] API tests: normal **Users** cannot hit `/api/admin/*`
+- [ ] Manual QA script: create user/company → trial → expire → Admin renew → support ticket → Admin delete account
+
+### Security
+
+- [ ] Confirm CSRF / JWT / session rules for Admin
+- [ ] Confirm no PII leak in list endpoints
+- [ ] Confirm delete is irreversible and logged
+- [ ] Document how to create the **one App Admin** account (`createsuperuser` + `is_app_admin`)
+
+### Deploy
+
+- [ ] Migrations on Railway (plans, subscriptions, support, audit)
+- [ ] Env vars for any payment/email providers
+- [ ] Seed plans in production
+- [ ] Create the App Admin account
+- [ ] Update README / ops notes for Admin access
+- [ ] Announce subscription end page to existing Users
+
+---
+
+## Suggested delivery milestones (ship slices)
+
+### Milestone A — Admin foundation
+
+- [ ] Phase 1 complete (Admin vs User only)
+- [ ] Phase 2 (list / disable / edit) complete — delete can wait one slice
+
+### Milestone B — Subscriptions
+
+- [ ] Phase 3 core (models, Admin renew/disable, User end-date page, enforcement)
+
+### Milestone C — Support
+
+- [ ] Phase 4 complete (User tickets + Admin inbox)
+
+### Milestone D — Hard delete + polish
+
+- [ ] Full cascade delete
+- [ ] Phase 5 dashboard KPIs
+- [ ] Phase 7 tests + production launch
+
+### Milestone E — Payments (optional)
+
+- [ ] Phase 3b online or semi-automated payments
+
+---
+
+## Out of scope for first release (park here)
+
+- [ ] Extra admin roles (company admin, site admin, multi-staff RBAC) — **not in product**
+- [ ] Multi-currency tax invoices
+- [ ] WhatsApp / SMS support
+- [ ] Full accounting ERP
+- [ ] Multi-tenant white-label domains
+- [ ] Mobile native stores (keep PWA)
+
+---
+
+## Progress summary
+
+| Area            | Status      |
+| --------------- | ----------- |
+| Decisions       | **Done** (Phase 0 locked) |
+| Roles / access  | **Done** (Phase 1) |
+| Account admin   | Not started |
+| Subscriptions   | Not started |
+| Support         | Not started |
+| Admin dashboard | Not started |
+| Launch / QA     | Not started |
+
+Update this table as milestones complete.
+
+---
+
+## Notes for implementers
+
+1. **Admin** = LabourPro staff, sole controller of the whole app (`is_superuser`). **Users** = everyone else.
+2. Do not build company/site “admin” roles for the platform — out of scope.
+3. **Delete entire account** = delete the **company tenant** and all site/crew/attendance/material/payment data owned by that company, plus memberships and related user record(s) as implemented in Phase 2.
+4. **Disable** is reversible; **delete** is not. No soft-delete purge window in v1.
+5. Subscriptions are **per company**; Admin renews manually in v1.
+6. Support is **in-app tickets** only in v1.
+7. Support tickets should show company + subscription context on the Admin side.
