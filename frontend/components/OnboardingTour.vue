@@ -92,8 +92,22 @@
 </template>
 
 <script setup lang="ts">
-const { active, steps, stepIndex, currentStep, isFirst, isLast, ready, targetRect, next, prev, skip, refreshRect } =
-  useOnboardingTour()
+const {
+  active,
+  steps,
+  stepIndex,
+  currentStep,
+  isFirst,
+  isLast,
+  ready,
+  targetRect,
+  next,
+  prev,
+  skip,
+  abort,
+  refreshRect,
+} = useOnboardingTour()
+const route = useRoute()
 
 const PADDING = 10
 const RADIUS = 16
@@ -255,20 +269,33 @@ function onKeydown(e: KeyboardEvent) {
   else if (e.key === 'ArrowLeft') prev()
 }
 
-watch(active, (isActive) => {
-  if (!import.meta.client) return
-  document.body.classList.toggle('tour-open', isActive)
-  if (isActive) {
-    window.addEventListener('keydown', onKeydown)
-    reposition()
-  } else {
-    window.removeEventListener('keydown', onKeydown)
-  }
-})
+watch(
+  active,
+  (isActive) => {
+    if (!import.meta.client) return
+    document.body.classList.toggle('tour-open', isActive)
+    if (isActive) {
+      window.addEventListener('keydown', onKeydown)
+      reposition()
+    } else {
+      window.removeEventListener('keydown', onKeydown)
+    }
+  },
+  { immediate: true },
+)
 
 onMounted(() => {
   window.addEventListener('resize', onResize)
-  if (active.value) reposition()
+  if (!active.value) return
+  // A tour that expects a specific route but is mounted somewhere else is orphaned
+  // (e.g. the flow was interrupted by sign-out or a manual navigation) — discard it
+  // instead of yanking the user back into a stale tour or leaving a stuck overlay.
+  const step = currentStep.value
+  if (step?.to && route.path !== step.to) {
+    abort()
+    return
+  }
+  reposition()
 })
 
 onUnmounted(() => {

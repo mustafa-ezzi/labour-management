@@ -2,7 +2,7 @@
   <div>
     <UiPageHeader title="Workers" subtitle="Active and inactive labour on this site">
       <template #action>
-        <NuxtLink :to="`/sites/${siteId}/crew/new`" class="ui-btn-primary">Add worker</NuxtLink>
+        <NuxtLink :to="`/sites/${siteId}/crew/new`" data-tour="crew-add-btn" class="ui-btn-primary">Add worker</NuxtLink>
       </template>
     </UiPageHeader>
 

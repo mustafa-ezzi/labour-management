@@ -9,7 +9,7 @@
     </UiPageHeader>
 
     <div class="mb-5 grid gap-4 lg:grid-cols-12 lg:gap-8">
-      <UiCard class="lg:col-span-4">
+      <UiCard class="lg:col-span-4" data-tour="wages-date-card">
         <label class="ui-label" for="day">Date</label>
         <input id="day" v-model="day" type="date" class="ui-input" @change="onDayChange" />
         <p v-if="daySummary" class="mt-2 text-xs text-gray-400">

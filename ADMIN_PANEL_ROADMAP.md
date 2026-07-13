@@ -24,8 +24,6 @@ There are only **two kinds of people** in the system:
 
 ---
 
-
-
 ## PWA + Admin on mobile (how you log in)
 
 LabourPro is a **single PWA** for both Users and the App Admin. There is **no separate Admin app** to install.
@@ -39,8 +37,6 @@ LabourPro is a **single PWA** for both Users and the App Admin. There is **no se
 | **Admin** | **Same** LabourPro PWA (or Chrome/Safari on the phone) | App Admin email/password (`createsuperuser`) | `/admin` (Admin panel)              |
 
 
-
-
 ### Step-by-step (Admin on phone)
 
 1. Open the LabourPro URL in **Chrome** (Android) or **Safari** (iPhone), or open the installed **LabourPro** home-screen icon.
@@ -49,8 +45,6 @@ LabourPro is a **single PWA** for both Users and the App Admin. There is **no se
 4. After login, the app detects `is_app_admin` and sends you to `/admin` (Dashboard, Accounts, Subscriptions, Plans, Support, Audit).
 5. You manage the whole app from that Admin UI on the phone — same features as desktop, mobile layout already has a top tab strip.
 
-
-
 ### Important rules
 
 - **Do not use your personal User account** for Admin work — Admin is only the superuser account.
@@ -58,8 +52,6 @@ LabourPro is a **single PWA** for both Users and the App Admin. There is **no se
 - You can keep one PWA icon; switching User ↔ Admin = sign out → sign in with the other account.
 - Optional later: bookmark `/admin` or add a second home-screen shortcut titled “LabourPro Admin” pointing at `https://your-app/admin` (still the same PWA).
 - Prefer **Chrome/Edge** on Android for PWA install; on iPhone use Safari → Share → Add to Home Screen.
-
-
 
 ### Checklist (document / polish)
 
@@ -70,8 +62,6 @@ LabourPro is a **single PWA** for both Users and the App Admin. There is **no se
 
 ---
 
-
-
 ## How to use this file
 
 - Mark a task done: change `- [ ]` → `- [x]`
@@ -79,8 +69,6 @@ LabourPro is a **single PWA** for both Users and the App Admin. There is **no se
 - Prefer shipping **Phase 0 → 1 → 2…** in order (auth & roles unlock everything else)
 
 ---
-
-
 
 ## Phase 0 — Product decisions (before coding)
 
@@ -96,19 +84,13 @@ LabourPro is a **single PWA** for both Users and the App Admin. There is **no se
 - [x] Sketch **Admin** IA: Dashboard, Users/Accounts, Subscriptions, Support, Settings
 - [x] Sketch **User** IA: Subscription status page, Support page, existing site/crew flows unchanged
 
-
-
 ### Locked decisions
-
-
 
 #### 1. Role model
 
 - **Admin** = LabourPro staff only — sole controller of the whole app (`/admin/`**).
 - **User** = everyone else (company accounts). No company-admin / site-admin / multi-admin roles.
 - Company membership roles (`owner`, `manager`, etc.) stay for **in-company permissions only** — they are **not** platform admins.
-
-
 
 #### 2. Admin bootstrap
 
@@ -117,15 +99,11 @@ LabourPro is a **single PWA** for both Users and the App Admin. There is **no se
 - Gate admin APIs/UI with `IsAppAdmin` = `user.is_authenticated and user.is_superuser`.
 - Do **not** add a separate `is_app_admin` column in v1 (avoids dual sources of truth). Revisit only if we need staff who are not full superusers.
 
-
-
 #### 3. Subscription unit
 
 - Bill / attach subscription to the **Company** (one subscription per company).
 - All users under that company share the same plan status and end date.
 - Matches existing `Company.subscription_plan` field (will be replaced/extended by a proper `Subscription` model in Phase 3).
-
-
 
 #### 4. Plans (v1)
 
@@ -140,16 +118,12 @@ LabourPro is a **single PWA** for both Users and the App Admin. There is **no se
 - Prices: store on `Plan` model but **v1 has no online checkout** — Admin sets/renews manually after payment outside the app (bank/JazzCash/etc.).
 - Placeholder prices can be documented in admin (e.g. PKR amounts) without charging in-app.
 
-
-
 #### 5. Payment flow (v1)
 
 - **Manual renew by Admin only** — no Stripe/JazzCash gateway in v1.
 - User sees plan + end date + “Contact support / pay to renew” messaging.
 - Optional: User can open a support ticket or “renew request”; Admin marks paid via **Renew** action.
 - Online payments = Phase 3b / Milestone E (parked).
-
-
 
 #### 6. Disable vs delete
 
@@ -164,15 +138,11 @@ LabourPro is a **single PWA** for both Users and the App Admin. There is **no se
 - Delete requires typed confirmation (company name or `DELETE`) and an audit log entry.
 - Do not allow Admin to delete their own Admin account.
 
-
-
 #### 7. Support channels (v1)
 
 - **In-app tickets only** (User ↔ Admin).
 - No email/WhatsApp/SMS in v1 (optional later).
 - Ticket statuses: `open` → `pending` → `resolved` → `closed`.
-
-
 
 #### 8. Admin information architecture
 
@@ -191,8 +161,6 @@ LabourPro is a **single PWA** for both Users and the App Admin. There is **no se
 - Admin never uses the normal site/crew bottom nav as their primary home.
 - Same installed PWA; Admin vs User is only which account signs in.
 
-
-
 #### 9. User information architecture
 
 ```
@@ -210,8 +178,6 @@ New User pages
 - To cut off access, Admin uses **Accounts → Disable** manually.
 - Support + Subscription entries in app nav / settings area (exact placement in Phase 4/6).
 
-
-
 ### Phase 0 exit criteria
 
 - [x] All decisions above written and agreed for v1
@@ -219,13 +185,9 @@ New User pages
 
 ---
 
-
-
 ## Phase 1 — Roles, permissions & access control
 
 > **Status: COMPLETE** — App Admin access control, audit log, `/admin` shell.
-
-
 
 ### Backend
 
@@ -238,16 +200,12 @@ New User pages
 - [x] Subscription-expired enforcement **deferred to Phase 3**; gate page stub + API 403 redirect hook added
 - [x] Audit log model (`AdminAuditLog`) + `/api/admin/audit/` list
 
-
-
 ### Frontend
 
 - [x] Route guard: `/admin/**` only if current user is the App Admin (`middleware/admin.ts`)
 - [x] Separate Admin layout (nav: Dashboard, Accounts, Plans, Support, Audit)
 - [x] Never show Admin nav to normal Users
 - [x] User-facing gate page stub: `/subscription-ended` (full subscription UI in Phase 3)
-
-
 
 login?admin=1
 
@@ -268,13 +226,11 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ---
 
-
-
 ## Phase 2 — Account management (Admin only)
 
 > **Status: COMPLETE** — list/search, edit, disable/enable, hard delete + audit. Soft-delete deferred (Phase 0).
 
-
+`login?admin=1`)
 
 ### Data model
 
@@ -286,8 +242,6 @@ Bootstrap Admin: `python manage.py createsuperuser`
   - Owned Company → Sites → Materials → MaterialUsage → MaterialPayments (DB CASCADE)
   - CompanyMemberships removed; owned companies deleted before user (`owner` is PROTECT)
   - User row deleted last (auth tokens / sessions follow user FK cascade)
-
-
 
 ### Admin APIs
 
@@ -301,8 +255,6 @@ Bootstrap Admin: `python manage.py createsuperuser`
 - [x] Confirmation payload required for delete (type company name / `DELETE`)
 - [x] Write audit entries for every disable / enable / update / delete
 
-
-
 ### Admin UI
 
 - [x] Accounts list: search, status badges, plan badge
@@ -310,8 +262,6 @@ Bootstrap Admin: `python manage.py createsuperuser`
 - [x] Actions: Disable, Enable, Delete (danger zone with typed confirm)
 - [x] Error handling for failed cascade deletes
 - [x] Empty and loading states
-
-
 
 ### Safety
 
@@ -321,17 +271,18 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ### Phase 2 API surface
 
-| Method | Path | Purpose |
-| ------ | ---- | ------- |
-| GET | `/api/admin/accounts/` | List / search accounts |
-| GET | `/api/admin/accounts/:id/` | Account detail |
-| PATCH | `/api/admin/accounts/:id/` | Update profile / company name |
-| POST | `/api/admin/accounts/:id/disable/` | Disable login |
-| POST | `/api/admin/accounts/:id/enable/` | Re-enable |
-| DELETE | `/api/admin/accounts/:id/` | Hard-delete workspace + user |
+
+| Method | Path                               | Purpose                       |
+| ------ | ---------------------------------- | ----------------------------- |
+| GET    | `/api/admin/accounts/`             | List / search accounts        |
+| GET    | `/api/admin/accounts/:id/`         | Account detail                |
+| PATCH  | `/api/admin/accounts/:id/`         | Update profile / company name |
+| POST   | `/api/admin/accounts/:id/disable/` | Disable login                 |
+| POST   | `/api/admin/accounts/:id/enable/`  | Re-enable                     |
+| DELETE | `/api/admin/accounts/:id/`         | Hard-delete workspace + user  |
+
+
 ---
-
-
 
 ## Phase 3 — Subscriptions & billing lifecycle
 
@@ -340,8 +291,6 @@ Bootstrap Admin: `python manage.py createsuperuser`
 > **Enforcement rule (locked):** plan expiry = **alerts only**. Never auto-disable login or block APIs.
 > Cutting off a customer is always **Accounts → Disable** by Admin.
 
-
-
 ### Data model
 
 - [x] `Plan` model: name, price, currency, duration_days, features JSON (optional)
@@ -349,8 +298,6 @@ Bootstrap Admin: `python manage.py createsuperuser`
 - [x] Seed default plans (trial / monthly / yearly)
 - [x] On new company registration: auto-create trial subscription
 - [x] Migration for existing companies: assign plan with an end date
-
-
 
 ### Admin APIs
 
@@ -361,15 +308,11 @@ Bootstrap Admin: `python manage.py createsuperuser`
 - [x] `POST /api/admin/subscriptions/:id/set-dates/` — manual start/end override
 - [x] Filter: subscriptions ending in N days
 
-
-
 ### User APIs
 
 - [x] `GET /api/subscription/me/` — current plan, end date, days remaining, status
 - [x] `GET /api/subscription/plans/` — plan list (for “pay / renew” info)
 - [ ] Optional v1: `POST /api/subscription/renew-request/` — deferred (support tickets in Phase 4)
-
-
 
 ### Admin UI
 
@@ -378,8 +321,6 @@ Bootstrap Admin: `python manage.py createsuperuser`
 - [x] Per-company: Renew, Cancel, Change plan, Edit end date
 - [x] Dashboard widgets: active subs, expiring this week, expired count
 
-
-
 ### User UI
 
 - [x] **Subscription** page: plan name, status, **end date**, days left, renew guidance
@@ -387,15 +328,11 @@ Bootstrap Admin: `python manage.py createsuperuser`
 - [x] `/subscription-ended` only for **disabled accounts** (not plan expiry)
 - [x] Nav entry: Subscription
 
-
-
 ### Enforcement
 
 - [x] Cron / management command: `mark_expired_subscriptions` (status only)
 - [x] ~~API block when expired~~ — **won’t do** (alerts only)
 - [x] ~~Frontend hard gate when expired~~ — **won’t do** (alerts only)
-
-
 
 ### Payments (later / optional Phase 3b)
 
@@ -406,28 +343,26 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ### Phase 3 API surface
 
-| Method | Path | Purpose |
-| ------ | ---- | ------- |
-| GET/POST | `/api/admin/plans/` | List / create plans |
-| PATCH | `/api/admin/plans/:id/` | Update plan |
-| GET | `/api/admin/subscriptions/` | List / filter subscriptions |
-| GET | `/api/admin/subscriptions/:id/` | Detail |
-| POST | `/api/admin/subscriptions/:id/renew/` | Extend end date |
-| POST | `/api/admin/subscriptions/:id/cancel/` | Mark cancelled (login unchanged) |
-| POST | `/api/admin/subscriptions/:id/set-dates/` | Override dates |
-| POST | `/api/admin/subscriptions/:id/change-plan/` | Switch plan |
-| GET | `/api/subscription/me/` | User plan status |
-| GET | `/api/subscription/plans/` | Public plan catalog |
+
+| Method   | Path                                        | Purpose                          |
+| -------- | ------------------------------------------- | -------------------------------- |
+| GET/POST | `/api/admin/plans/`                         | List / create plans              |
+| PATCH    | `/api/admin/plans/:id/`                     | Update plan                      |
+| GET      | `/api/admin/subscriptions/`                 | List / filter subscriptions      |
+| GET      | `/api/admin/subscriptions/:id/`             | Detail                           |
+| POST     | `/api/admin/subscriptions/:id/renew/`       | Extend end date                  |
+| POST     | `/api/admin/subscriptions/:id/cancel/`      | Mark cancelled (login unchanged) |
+| POST     | `/api/admin/subscriptions/:id/set-dates/`   | Override dates                   |
+| POST     | `/api/admin/subscriptions/:id/change-plan/` | Switch plan                      |
+| GET      | `/api/subscription/me/`                     | User plan status                 |
+| GET      | `/api/subscription/plans/`                  | Public plan catalog              |
+
 
 ---
-
-
 
 ## Phase 4 — Support messaging (User ↔ Admin)
 
 > **Status: COMPLETE** — in-app tickets User ↔ Admin. Email notify optional later.
-
-
 
 ### Data model
 
@@ -435,16 +370,12 @@ Bootstrap Admin: `python manage.py createsuperuser`
 - [x] `SupportMessage`: ticket, sender (User or Admin), body, attachments (optional later), created_at, `is_admin_reply`
 - [x] Indexes for unread / open tickets
 
-
-
 ### User APIs
 
 - [x] `GET /api/support/tickets/` — my company’s tickets
 - [x] `POST /api/support/tickets/` — create ticket + first message
 - [x] `GET /api/support/tickets/:id/` — thread
 - [x] `POST /api/support/tickets/:id/messages/` — reply
-
-
 
 ### Admin APIs
 
@@ -454,8 +385,6 @@ Bootstrap Admin: `python manage.py createsuperuser`
 - [x] `PATCH /api/admin/support/tickets/:id/` — change status / priority
 - [x] Unread counts for Admin badge
 
-
-
 ### User UI
 
 - [x] Support tab / page: list tickets
@@ -463,16 +392,12 @@ Bootstrap Admin: `python manage.py createsuperuser`
 - [x] Conversation thread view
 - [x] Status badges
 
-
-
 ### Admin UI
 
 - [x] Support inbox (open first)
 - [x] Ticket detail with company + subscription sidebar
 - [x] Reply box + mark resolved / close
 - [x] Optional: quick actions “renew plan” / “open account” from ticket
-
-
 
 ### Notifications (optional)
 
@@ -482,24 +407,23 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ### Phase 4 API surface
 
-| Method | Path | Purpose |
-| ------ | ---- | ------- |
-| GET/POST | `/api/support/tickets/` | User list / create |
-| GET | `/api/support/tickets/:id/` | User thread |
-| POST | `/api/support/tickets/:id/messages/` | User reply |
-| GET | `/api/admin/support/tickets/` | Admin inbox |
-| GET/PATCH | `/api/admin/support/tickets/:id/` | Admin thread / status |
-| POST | `/api/admin/support/tickets/:id/messages/` | Admin reply |
+
+| Method    | Path                                       | Purpose               |
+| --------- | ------------------------------------------ | --------------------- |
+| GET/POST  | `/api/support/tickets/`                    | User list / create    |
+| GET       | `/api/support/tickets/:id/`                | User thread           |
+| POST      | `/api/support/tickets/:id/messages/`       | User reply            |
+| GET       | `/api/admin/support/tickets/`              | Admin inbox           |
+| GET/PATCH | `/api/admin/support/tickets/:id/`          | Admin thread / status |
+| POST      | `/api/admin/support/tickets/:id/messages/` | Admin reply           |
+
+
 ---
-
-
 
 ## Phase 5 — Admin dashboard & extra whole-app features
 
 > **Status: COMPLETE** (v1) — KPIs, charts, search, CSV export, light rate limits.
 > Skipped for v1: impersonate, feature flags, announcement banner.
-
-
 
 - [x] KPI cards: total companies, active users, active subs, estimated MRR, open tickets
 - [x] Charts: signups over time (30d bar chart), expiring subscriptions list
@@ -513,15 +437,44 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ### Phase 5 API surface
 
-| Method | Path | Purpose |
-| ------ | ---- | ------- |
-| GET | `/api/admin/dashboard/` | KPIs, signup series, expiring, audit, tickets |
-| GET | `/api/admin/search/?q=` | Global search |
-| GET | `/api/admin/exports/accounts/` | Accounts CSV |
-| GET | `/api/admin/exports/subscriptions/` | Subscriptions CSV |
+
+| Method | Path                                | Purpose                                       |
+| ------ | ----------------------------------- | --------------------------------------------- |
+| GET    | `/api/admin/dashboard/`             | KPIs, signup series, expiring, audit, tickets |
+| GET    | `/api/admin/search/?q=`             | Global search                                 |
+| GET    | `/api/admin/exports/accounts/`      | Accounts CSV                                  |
+| GET    | `/api/admin/exports/subscriptions/` | Subscriptions CSV                             |
+
+
 ---
 
+## Phase 5.5 — Guided onboarding tour (User app)
 
+> **Status: COMPLETE** — glassmorphism spotlight walkthrough, auto-started for new signups.
+
+- [x] Reusable tour engine (`useOnboardingTour`) — drives cross-page navigation, locates
+      target elements by `data-tour="..."` selector, retries until mounted, exposes step state
+- [x] `OnboardingTour.vue` overlay — dark blurred backdrop with a spotlight cut-out around
+      the active target, pulsing violet glow ring, and a glassmorphism (frosted, translucent)
+      tooltip card with Back / Skip tour / Next-Finish controls, step dots, and Esc / ← / →
+      keyboard support
+- [x] Main tour (7 steps): welcome → company card → Sites shortcut → Add site button →
+      Subscription nav → Support nav → done. Auto-starts once, right after `/auth/register/`
+      succeeds (flag set in `useOnboardingFlags`, consumed on first Dashboard mount)
+- [x] Contextual site tour (7 steps): stats snapshot → crew (Add worker) → attendance/daily
+      wages → materials → log usage → pay materials → done. Navigates across the real
+      worker/wages/materials/usage/pay pages (not just shortcut tiles) so each workflow gets a
+      live walkthrough. Auto-starts the first time any site overview page loads
+- [x] Floating "replay tour" button in the app shell (hidden while a tour or the PWA install
+      modal is open) so users can re-open the main tour anytime
+- [x] Plays nicely with the PWA install prompt — tour auto-start waits for that modal to close
+      first instead of overlapping it
+- [x] Fixed: tour state (`useState`, survives client-side navigation) could get orphaned if a
+      tour was interrupted by sign-out, re-appearing as a stuck overlay on a later login until
+      a hard refresh. Now reset on `auth.clear()` and self-aborts if mounted on a route that
+      doesn't match its current step
+
+---
 
 ## Phase 6 — Frontend architecture (Admin panel + User app)
 
@@ -535,11 +488,7 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ---
 
-
-
 ## Phase 7 — Testing, security & launch
-
-
 
 ### Testing
 
@@ -549,16 +498,12 @@ Bootstrap Admin: `python manage.py createsuperuser`
 - [ ] API tests: normal **Users** cannot hit `/api/admin/`*
 - [ ] Manual QA script: create user/company → trial → expire → Admin renew → support ticket → Admin delete account
 
-
-
 ### Security
 
 - [ ] Confirm CSRF / JWT / session rules for Admin
 - [ ] Confirm no PII leak in list endpoints
 - [ ] Confirm delete is irreversible and logged
 - [ ] Document how to create the **one App Admin** account (`createsuperuser` + `is_app_admin`)
-
-
 
 ### Deploy
 
@@ -571,30 +516,20 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ---
 
-
-
 ## Suggested delivery milestones (ship slices)
-
-
 
 ### Milestone A — Admin foundation
 
 - [x] Phase 1 complete (Admin vs User only)
 - [x] Phase 2 (list / disable / edit / hard delete) complete
 
-
-
 ### Milestone B — Subscriptions
 
 - [x] Phase 3 core (models, Admin renew/cancel, User alerts, no auto-disable)
 
-
-
 ### Milestone C — Support
 
 - [x] Phase 4 complete (User tickets + Admin inbox)
-
-
 
 ### Milestone D — Hard delete + polish
 
@@ -602,15 +537,11 @@ Bootstrap Admin: `python manage.py createsuperuser`
 - [x] Phase 5 dashboard KPIs
 - [ ] Phase 7 tests + production launch
 
-
-
 ### Milestone E — Payments (optional)
 
 - [ ] Phase 3b online or semi-automated payments
 
 ---
-
-
 
 ## Out of scope for first release (park here)
 
@@ -623,27 +554,23 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ---
 
-
-
 ## Progress summary
 
 
-| Area            | Status                    |
-| --------------- | ------------------------- |
-| Decisions       | **Done** (Phase 0 locked) |
-| Roles / access  | **Done** (Phase 1)        |
-| Account admin   | **Done** (Phase 2)        |
+| Area            | Status                           |
+| --------------- | -------------------------------- |
+| Decisions       | **Done** (Phase 0 locked)        |
+| Roles / access  | **Done** (Phase 1)               |
+| Account admin   | **Done** (Phase 2)               |
 | Subscriptions   | **Done** (Phase 3 — alerts only) |
-| Support         | **Done** (Phase 4)        |
-| Admin dashboard | **Done** (Phase 5)        |
-| Launch / QA     | Not started               |
+| Support         | **Done** (Phase 4)               |
+| Admin dashboard | **Done** (Phase 5)               |
+| Launch / QA     | Not started                      |
 
 
 Update this table as milestones complete.
 
 ---
-
-
 
 ## Notes for implementers
 

@@ -125,6 +125,23 @@ export function useOnboardingTour() {
     cb?.()
   }
 
+  /**
+   * Silently discard tour state without firing onFinish — used when the tour is
+   * orphaned (e.g. the user signed out, or navigated away outside the tour flow)
+   * rather than genuinely completed or skipped by the user.
+   */
+  function abort() {
+    active.value = false
+    steps.value = []
+    stepIndex.value = 0
+    targetRect.value = null
+    ready.value = false
+    finishCb.value = null
+    if (import.meta.client) {
+      document.body.classList.remove('tour-open')
+    }
+  }
+
   return {
     active,
     steps,
@@ -139,6 +156,7 @@ export function useOnboardingTour() {
     prev,
     finish,
     skip: finish,
+    abort,
     refreshRect,
   }
 }

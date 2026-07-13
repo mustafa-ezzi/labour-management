@@ -2,7 +2,7 @@
   <div>
     <UiPageHeader title="Materials" subtitle="Definitions and totals from usage entries">
       <template #action>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-2" data-tour="materials-header-actions">
           <NuxtLink
             :to="`/sites/${siteId}/materials/new`"
             class="ui-btn-secondary"

@@ -13,7 +13,7 @@
     </UiPageHeader>
 
     <div class="mb-5 grid gap-4 lg:grid-cols-12 lg:gap-8">
-      <UiCard class="space-y-4 lg:col-span-4">
+      <UiCard class="space-y-4 lg:col-span-4" data-tour="pay-date-card">
         <div>
           <label class="ui-label" for="pdate">Payment date</label>
           <input id="pdate" v-model="payDate" type="date" class="ui-input" />

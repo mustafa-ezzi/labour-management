@@ -65,6 +65,16 @@ export const useAuthStore = defineStore('auth', {
       writeAdminFlag(false)
       if (import.meta.client) {
         localStorage.removeItem('lm:lastSiteId')
+        // Guided-tour state is a global useState singleton that survives client-side
+        // navigation. Without this, a tour interrupted by sign-out (or a forced
+        // logout from a 401/disabled-account redirect) stays "active" in memory and
+        // can re-render as a blocking overlay next time someone logs in on this tab —
+        // looking like login "doesn't work" until a hard refresh resets the state.
+        try {
+          useOnboardingTour().abort()
+        } catch {
+          document.body.classList.remove('tour-open')
+        }
       }
     },
   },

@@ -4,7 +4,7 @@
 
     <div class="lg:grid lg:grid-cols-12 lg:gap-8">
       <div class="space-y-4 lg:col-span-4">
-        <UiCard>
+        <UiCard data-tour="usage-date-card">
           <label class="ui-label" for="udate">Date</label>
           <input id="udate" v-model="usageDate" type="date" class="ui-input" @change="onDateChange" />
         </UiCard>

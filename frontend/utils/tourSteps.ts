@@ -59,8 +59,13 @@ export function buildMainTourSteps(): TourStep[] {
   ]
 }
 
-/** Contextual tour shown the first time any site overview page is opened. */
-export function buildSiteTourSteps(): TourStep[] {
+/**
+ * Contextual tour shown the first time any site overview page is opened.
+ * Walks the actual worker, attendance/wage, material, log-usage, and pay-material
+ * screens (not just shortcut tiles) so every core workflow gets a real, live demo.
+ */
+export function buildSiteTourSteps(siteId: string): TourStep[] {
+  const base = `/sites/${siteId}`
   return [
     {
       id: 'site-stats',
@@ -70,45 +75,46 @@ export function buildSiteTourSteps(): TourStep[] {
       icon: 'attendance',
     },
     {
-      id: 'site-wages',
-      selector: '[data-tour="site-wages-tile"]',
-      title: 'Daily wages',
-      description: 'Mark attendance and pay wages for your whole crew from one screen.',
-      icon: 'wages',
-    },
-    {
-      id: 'site-workers',
-      selector: '[data-tour="site-workers-tile"]',
-      title: 'Manage your crew',
-      description: 'Add workers, edit rates, and check individual balances.',
+      id: 'crew',
+      to: `${base}/crew`,
+      selector: '[data-tour="crew-add-btn"]',
+      title: 'Add your crew',
+      description:
+        'Add every worker on this site with a name and daily wage rate. Edit or deactivate anyone anytime.',
       icon: 'crew',
     },
     {
-      id: 'site-materials',
-      selector: '[data-tour="site-materials-tile"]',
+      id: 'wages',
+      to: `${base}/crew/wages`,
+      selector: '[data-tour="wages-date-card"]',
+      title: 'Attendance & daily wages',
+      description:
+        "Pick a date, mark who worked, and set what's paid — pending balances are calculated for you automatically.",
+      icon: 'wages',
+    },
+    {
+      id: 'materials',
+      to: `${base}/materials`,
+      selector: '[data-tour="materials-header-actions"]',
       title: 'Materials',
-      description: 'Track material stock and what you owe suppliers.',
+      description:
+        'Add every material you buy for the site with its unit and rate — costs build up automatically as you log usage.',
       icon: 'materials',
     },
     {
-      id: 'site-logusage',
-      selector: '[data-tour="site-logusage-tile"]',
+      id: 'log-usage',
+      to: `${base}/materials/usage`,
+      selector: '[data-tour="usage-date-card"]',
       title: 'Log usage',
-      description: 'Record materials used today in a couple of taps.',
+      description: 'Record how much of a material was used on any date — the cost is calculated for you.',
       icon: 'log',
     },
     {
-      id: 'site-history',
-      selector: '[data-tour="site-history-link"]',
-      title: 'Attendance history',
-      description: 'A calendar view of who showed up, for any worker, any day.',
-      icon: 'attendance',
-    },
-    {
-      id: 'site-pay',
-      selector: '[data-tour="site-pay-link"]',
+      id: 'pay-materials',
+      to: `${base}/materials/pay`,
+      selector: '[data-tour="pay-date-card"]',
       title: 'Pay materials',
-      description: "Settle what you owe suppliers, whenever you're ready.",
+      description: "Settle what you owe suppliers — partially or in full, whenever you're ready.",
       icon: 'pay',
     },
     {
