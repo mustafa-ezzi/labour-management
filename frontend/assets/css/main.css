@@ -31,12 +31,12 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Mobile / PWA: never lock the document — allow vertical scroll */
+  /* Mobile / PWA: document is the scroll root — never lock height to the viewport */
   html {
     height: auto;
     min-height: 100%;
     overflow-x: clip;
-    overflow-y: auto;
+    overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -45,8 +45,8 @@
     height: auto;
     min-height: 100%;
     overflow-x: clip;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
+    overflow-y: visible;
+    overscroll-behavior-y: auto;
   }
 
   #__nuxt {
@@ -56,7 +56,9 @@
   }
 
   body.pwa-modal-open {
-    overflow: hidden;
+    /* Keep document scrollable; overlay handles blocking interaction.
+       overflow:hidden here was sticking and locking the whole app. */
+    overscroll-behavior: none;
   }
 }
 

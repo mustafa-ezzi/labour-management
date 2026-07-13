@@ -425,59 +425,71 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ## Phase 4 — Support messaging (User ↔ Admin)
 
+> **Status: COMPLETE** — in-app tickets User ↔ Admin. Email notify optional later.
+
 
 
 ### Data model
 
-- [ ] `SupportTicket`: company, created_by (User), subject, status (`open` | `pending` | `resolved` | `closed`), priority, created_at, updated_at
-- [ ] `SupportMessage`: ticket, sender (User or Admin), body, attachments (optional later), created_at, `is_admin_reply`
-- [ ] Indexes for unread / open tickets
+- [x] `SupportTicket`: company, created_by (User), subject, status (`open` | `pending` | `resolved` | `closed`), priority, created_at, updated_at
+- [x] `SupportMessage`: ticket, sender (User or Admin), body, attachments (optional later), created_at, `is_admin_reply`
+- [x] Indexes for unread / open tickets
 
 
 
 ### User APIs
 
-- [ ] `GET /api/support/tickets/` — my company’s tickets
-- [ ] `POST /api/support/tickets/` — create ticket + first message
-- [ ] `GET /api/support/tickets/:id/` — thread
-- [ ] `POST /api/support/tickets/:id/messages/` — reply
+- [x] `GET /api/support/tickets/` — my company’s tickets
+- [x] `POST /api/support/tickets/` — create ticket + first message
+- [x] `GET /api/support/tickets/:id/` — thread
+- [x] `POST /api/support/tickets/:id/messages/` — reply
 
 
 
 ### Admin APIs
 
-- [ ] `GET /api/admin/support/tickets/` — all tickets (filter status, company)
-- [ ] `GET /api/admin/support/tickets/:id/` — thread + company context
-- [ ] `POST /api/admin/support/tickets/:id/messages/` — Admin reply
-- [ ] `PATCH /api/admin/support/tickets/:id/` — change status / priority
-- [ ] Unread counts for Admin badge
+- [x] `GET /api/admin/support/tickets/` — all tickets (filter status, company)
+- [x] `GET /api/admin/support/tickets/:id/` — thread + company context
+- [x] `POST /api/admin/support/tickets/:id/messages/` — Admin reply
+- [x] `PATCH /api/admin/support/tickets/:id/` — change status / priority
+- [x] Unread counts for Admin badge
 
 
 
 ### User UI
 
-- [ ] Support tab / page: list tickets
-- [ ] New ticket form (subject + message)
-- [ ] Conversation thread view
-- [ ] Status badges
+- [x] Support tab / page: list tickets
+- [x] New ticket form (subject + message)
+- [x] Conversation thread view
+- [x] Status badges
 
 
 
 ### Admin UI
 
-- [ ] Support inbox (open first)
-- [ ] Ticket detail with company + subscription sidebar
-- [ ] Reply box + mark resolved / close
-- [ ] Optional: quick actions “renew plan” / “open account” from ticket
+- [x] Support inbox (open first)
+- [x] Ticket detail with company + subscription sidebar
+- [x] Reply box + mark resolved / close
+- [x] Optional: quick actions “renew plan” / “open account” from ticket
 
 
 
 ### Notifications (optional)
 
-- [ ] In-app unread badge
+- [x] In-app unread badge (dot on unread tickets)
 - [ ] Email notify Admin on new ticket
 - [ ] Email notify User on Admin reply
 
+### Phase 4 API surface
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET/POST | `/api/support/tickets/` | User list / create |
+| GET | `/api/support/tickets/:id/` | User thread |
+| POST | `/api/support/tickets/:id/messages/` | User reply |
+| GET | `/api/admin/support/tickets/` | Admin inbox |
+| GET/PATCH | `/api/admin/support/tickets/:id/` | Admin thread / status |
+| POST | `/api/admin/support/tickets/:id/messages/` | Admin reply |
 ---
 
 
@@ -567,7 +579,7 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ### Milestone C — Support
 
-- [ ] Phase 4 complete (User tickets + Admin inbox)
+- [x] Phase 4 complete (User tickets + Admin inbox)
 
 
 
@@ -609,7 +621,7 @@ Bootstrap Admin: `python manage.py createsuperuser`
 | Roles / access  | **Done** (Phase 1)        |
 | Account admin   | **Done** (Phase 2)        |
 | Subscriptions   | **Done** (Phase 3 — alerts only) |
-| Support         | Not started               |
+| Support         | **Done** (Phase 4)        |
 | Admin dashboard | Not started               |
 | Launch / QA     | Not started               |
 

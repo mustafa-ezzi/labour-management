@@ -175,17 +175,38 @@ const {
 const installError = ref('')
 
 watch(
-  modalOpen,
-  (open) => {
+  [modalOpen, showDownloadPopup],
+  ([open, show]) => {
     if (!import.meta.client) return
-    document.body.classList.toggle('pwa-modal-open', Boolean(open && showDownloadPopup.value))
+    const lock = Boolean(open && show)
+    document.body.classList.toggle('pwa-modal-open', lock)
+    if (!lock) {
+      document.body.classList.remove('pwa-modal-open')
+      document.body.style.removeProperty('overflow')
+    }
   },
   { immediate: true },
 )
 
 onUnmounted(() => {
-  if (import.meta.client) document.body.classList.remove('pwa-modal-open')
+  if (import.meta.client) {
+    document.body.classList.remove('pwa-modal-open')
+    document.body.style.removeProperty('overflow')
+  }
 })
+
+const route = useRoute()
+watch(
+  () => route.fullPath,
+  () => {
+    if (!import.meta.client) return
+    // Never leave a stuck scroll lock after navigation.
+    if (!modalOpen.value) {
+      document.body.classList.remove('pwa-modal-open')
+      document.body.style.removeProperty('overflow')
+    }
+  },
+)
 
 function installNow() {
   installError.value = ''

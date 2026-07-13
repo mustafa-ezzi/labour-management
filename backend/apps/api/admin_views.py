@@ -19,6 +19,7 @@ from apps.accounts.audit import AdminAuditLog
 from apps.accounts.audit_services import write_admin_audit
 from apps.api.permissions import IsAppAdmin
 from apps.companies.models import Company, Subscription, SubscriptionStatus
+from apps.support.services import open_ticket_count
 
 User = get_user_model()
 
@@ -58,7 +59,7 @@ class AdminDashboardView(APIView):
                 "active_users": users.filter(is_active=True).count(),
                 "disabled_users": users.filter(is_active=False).count(),
                 "total_companies": Company.objects.count(),
-                "open_support_tickets": 0,
+                "open_support_tickets": open_ticket_count(),
                 "active_subscriptions": active_subs.count(),
                 "expired_subscriptions": Subscription.objects.filter(
                     status=SubscriptionStatus.EXPIRED
@@ -66,8 +67,8 @@ class AdminDashboardView(APIView):
                 "expiring_this_week": active_subs.filter(
                     ends_at__gte=now, ends_at__lte=week
                 ).count(),
-                "phase": "3",
-                "note": "Plan expiry shows alerts only; disable accounts manually.",
+                "phase": "4",
+                "note": "Support inbox live. Plan expiry is alerts-only.",
             }
         )
 

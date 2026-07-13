@@ -63,6 +63,9 @@ export const useAuthStore = defineStore('auth', {
       this.appAdminVerified = false
       clearAuthStorage()
       writeAdminFlag(false)
+      if (import.meta.client) {
+        localStorage.removeItem('lm:lastSiteId')
+      }
     },
   },
 })

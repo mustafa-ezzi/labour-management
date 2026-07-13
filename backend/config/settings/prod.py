@@ -45,16 +45,27 @@ if frontend_url:
 
 CORS_ALLOWED_ORIGINS = list(dict.fromkeys(_normalize_origin(o) for o in cors_origins if o))
 
-# Allow any Railway *.up.railway.app frontend (register/login from deployed Nuxt app)
+# Allow Railway frontends + optional local Nuxt when pointing at prod API
 CORS_ALLOWED_ORIGIN_REGEXES = [
     re.compile(r"^https://[a-z0-9-]+\.up\.railway\.app$"),
 ]
+if os.environ.get("CORS_ALLOW_LOCALHOST", "1") != "0":
+    CORS_ALLOWED_ORIGIN_REGEXES.extend(
+        [
+            re.compile(r"^http://localhost:\d+$"),
+            re.compile(r"^http://127\.0\.0\.1:\d+$"),
+        ]
+    )
 
 if not CORS_ALLOWED_ORIGINS and not os.environ.get("CORS_ALLOW_RAILWAY_REGEX", "1") == "0":
     # Regex above covers Railway; explicit list still preferred for non-Railway frontends
     pass
 
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS.copy()
+# Regex origins aren't auto-added to CSRF; include FRONTEND_URL + common local SPA ports.
+for _local in ("http://localhost:3000", "http://127.0.0.1:3000"):
+    if _local not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_local)
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [

@@ -34,6 +34,14 @@ export function useAppNav() {
         icon: 'pay',
         match: 'exact',
       },
+      {
+        to: '/support',
+        label: 'Support',
+        shortLabel: 'Help',
+        icon: 'attendance',
+        match: 'prefix',
+        prefix: '/support',
+      },
     ]
   })
 
@@ -46,9 +54,9 @@ export function useAppNav() {
     return path === pref || path.startsWith(`${pref}/`)
   }
 
-  /** Bottom grid: 3 columns when browsing globally, 4 when inside a site */
+  /** Bottom grid: 4 columns globally and inside a site */
   const bottomNavClass = computed(() =>
-    route.params.siteId ? 'grid-cols-4' : 'grid-cols-3',
+    route.params.siteId ? 'grid-cols-4' : 'grid-cols-4',
   )
 
   return { items, bottomNavClass, isActive }

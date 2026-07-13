@@ -13,6 +13,16 @@ from apps.api.admin_views import (
     AdminGateProbeView,
     AdminMeView,
 )
+from apps.api.support_admin_views import (
+    AdminSupportTicketDetailView,
+    AdminSupportTicketListView,
+    AdminSupportTicketMessageCreateView,
+)
+from apps.api.support_views import (
+    SupportTicketDetailView,
+    SupportTicketListCreateView,
+    SupportTicketMessageCreateView,
+)
 from apps.api.subscription_admin_views import (
     AdminPlanDetailView,
     AdminPlanListCreateView,
@@ -94,6 +104,17 @@ admin_urlpatterns = [
         AdminSubscriptionChangePlanView.as_view(),
         name="admin-subscription-change-plan",
     ),
+    path("support/tickets/", AdminSupportTicketListView.as_view(), name="admin-support-tickets"),
+    path(
+        "support/tickets/<uuid:ticket_id>/",
+        AdminSupportTicketDetailView.as_view(),
+        name="admin-support-ticket-detail",
+    ),
+    path(
+        "support/tickets/<uuid:ticket_id>/messages/",
+        AdminSupportTicketMessageCreateView.as_view(),
+        name="admin-support-ticket-messages",
+    ),
 ]
 
 urlpatterns = [
@@ -104,6 +125,17 @@ urlpatterns = [
     path("me/", MeView.as_view(), name="me"),
     path("subscription/me/", SubscriptionMeView.as_view(), name="subscription-me"),
     path("subscription/plans/", SubscriptionPlansView.as_view(), name="subscription-plans"),
+    path("support/tickets/", SupportTicketListCreateView.as_view(), name="support-tickets"),
+    path(
+        "support/tickets/<uuid:ticket_id>/",
+        SupportTicketDetailView.as_view(),
+        name="support-ticket-detail",
+    ),
+    path(
+        "support/tickets/<uuid:ticket_id>/messages/",
+        SupportTicketMessageCreateView.as_view(),
+        name="support-ticket-messages",
+    ),
     path("admin/", include((admin_urlpatterns, "admin-api"))),
     path("", include(router.urls)),
 ]

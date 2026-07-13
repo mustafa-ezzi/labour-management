@@ -39,7 +39,7 @@
       </div>
     </aside>
 
-    <div class="relative z-10 flex min-h-dvh min-w-0 flex-1 flex-col lg:pb-0" :class="mainPadClass">
+    <div class="relative z-10 flex min-h-dvh min-w-0 flex-1 flex-col overflow-visible lg:pb-0" :class="mainPadClass">
       <header class="ui-header-bar">
         <div class="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 lg:px-7 lg:py-3.5">
           <div class="flex items-center gap-2.5 lg:hidden">
@@ -71,7 +71,7 @@
         </div>
       </header>
 
-      <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-5 lg:px-7 lg:py-7">
+      <main class="mx-auto w-full max-w-6xl flex-1 overflow-visible px-4 py-5 lg:px-7 lg:py-7">
         <div
           v-if="showSubBanner && subInfo"
           class="mb-4 rounded-xl border px-4 py-3 text-sm"
@@ -162,6 +162,7 @@ function triggerInstall() {
 }
 
 async function logout() {
+  clearLastSiteId()
   auth.clear()
   await router.push('/login')
 }

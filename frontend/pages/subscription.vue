@@ -42,8 +42,9 @@
       <UiCard class="mt-4">
         <p class="text-sm font-semibold text-gray-900">How to renew</p>
         <p class="mt-2 text-sm text-gray-600">
-          Pay outside the app (bank / JazzCash / etc.), then ask LabourPro Admin to renew your plan.
-          Support tickets arrive in a later update — for now contact your LabourPro contact directly.
+          Pay outside the app (bank / JazzCash / etc.), then open a
+          <NuxtLink to="/support/new" class="ui-link">support ticket</NuxtLink>
+          so Admin can renew your plan.
         </p>
         <p class="mt-3 text-xs text-gray-400">
           Workspace: {{ sub.company_name }}

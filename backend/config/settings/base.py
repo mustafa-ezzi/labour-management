@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "apps.attendance",
     "apps.labour_payments",
     "apps.materials",
+    "apps.support",
     "apps.api",
 ]
 

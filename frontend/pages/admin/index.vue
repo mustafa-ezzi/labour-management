@@ -28,7 +28,7 @@
           <p class="mt-1 text-2xl font-bold tabular-nums text-gray-900">
             {{ stats.expired_subscriptions }}
           </p>
-          <p class="mt-0.5 text-xs text-gray-400">{{ stats.total_companies }} workspaces</p>
+          <p class="mt-0.5 text-xs text-gray-400">{{ stats.open_support_tickets }} open tickets</p>
         </div>
       </div>
 
