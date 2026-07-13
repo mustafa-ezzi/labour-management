@@ -27,6 +27,13 @@ export function useAppNav() {
     return [
       { to: '/dashboard', label: 'Dashboard', shortLabel: 'Home', icon: 'home', match: 'exact' },
       { to: '/sites', label: 'Sites', shortLabel: 'Sites', icon: 'site', match: 'prefix', prefix: '/sites' },
+      {
+        to: '/subscription',
+        label: 'Subscription',
+        shortLabel: 'Plan',
+        icon: 'pay',
+        match: 'exact',
+      },
     ]
   })
 
@@ -39,9 +46,9 @@ export function useAppNav() {
     return path === pref || path.startsWith(`${pref}/`)
   }
 
-  /** Bottom grid: 2 columns when browsing globally, 4 when inside a site */
+  /** Bottom grid: 3 columns when browsing globally, 4 when inside a site */
   const bottomNavClass = computed(() =>
-    route.params.siteId ? 'grid-cols-4' : 'grid-cols-2',
+    route.params.siteId ? 'grid-cols-4' : 'grid-cols-3',
   )
 
   return { items, bottomNavClass, isActive }

@@ -13,6 +13,17 @@ from apps.api.admin_views import (
     AdminGateProbeView,
     AdminMeView,
 )
+from apps.api.subscription_admin_views import (
+    AdminPlanDetailView,
+    AdminPlanListCreateView,
+    AdminSubscriptionCancelView,
+    AdminSubscriptionChangePlanView,
+    AdminSubscriptionDetailView,
+    AdminSubscriptionListView,
+    AdminSubscriptionRenewView,
+    AdminSubscriptionSetDatesView,
+)
+from apps.api.subscription_views import SubscriptionMeView, SubscriptionPlansView
 from apps.api.views import (
     AttendanceViewSet,
     HealthView,
@@ -55,6 +66,34 @@ admin_urlpatterns = [
         AdminAccountEnableView.as_view(),
         name="admin-account-enable",
     ),
+    path("plans/", AdminPlanListCreateView.as_view(), name="admin-plans"),
+    path("plans/<uuid:plan_id>/", AdminPlanDetailView.as_view(), name="admin-plan-detail"),
+    path("subscriptions/", AdminSubscriptionListView.as_view(), name="admin-subscriptions"),
+    path(
+        "subscriptions/<uuid:subscription_id>/",
+        AdminSubscriptionDetailView.as_view(),
+        name="admin-subscription-detail",
+    ),
+    path(
+        "subscriptions/<uuid:subscription_id>/renew/",
+        AdminSubscriptionRenewView.as_view(),
+        name="admin-subscription-renew",
+    ),
+    path(
+        "subscriptions/<uuid:subscription_id>/cancel/",
+        AdminSubscriptionCancelView.as_view(),
+        name="admin-subscription-cancel",
+    ),
+    path(
+        "subscriptions/<uuid:subscription_id>/set-dates/",
+        AdminSubscriptionSetDatesView.as_view(),
+        name="admin-subscription-set-dates",
+    ),
+    path(
+        "subscriptions/<uuid:subscription_id>/change-plan/",
+        AdminSubscriptionChangePlanView.as_view(),
+        name="admin-subscription-change-plan",
+    ),
 ]
 
 urlpatterns = [
@@ -63,6 +102,8 @@ urlpatterns = [
     path("auth/login/", LabourTokenObtainPairView.as_view(), name="auth-login"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="auth-refresh"),
     path("me/", MeView.as_view(), name="me"),
+    path("subscription/me/", SubscriptionMeView.as_view(), name="subscription-me"),
+    path("subscription/plans/", SubscriptionPlansView.as_view(), name="subscription-plans"),
     path("admin/", include((admin_urlpatterns, "admin-api"))),
     path("", include(router.urls)),
 ]

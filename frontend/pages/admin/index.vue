@@ -4,7 +4,7 @@
     <p v-else-if="error" class="text-red-600">{{ error }}</p>
     <template v-else-if="stats">
       <p class="mb-5 text-sm text-gray-500">
-        Whole-app overview. Account tools unlock in the next phases.
+        Whole-app overview. Plan expiry is alerts-only — disable login from Accounts when needed.
       </p>
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div class="rounded-xl border border-violet-200 bg-violet-50 px-4 py-4">
@@ -16,27 +16,32 @@
           <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-700">Disabled</p>
           <p class="mt-1 text-2xl font-bold tabular-nums text-amber-900">{{ stats.disabled_users }}</p>
         </div>
-        <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
-          <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Workspaces</p>
-          <p class="mt-1 text-2xl font-bold tabular-nums text-gray-900">{{ stats.total_companies }}</p>
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+          <p class="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Active plans</p>
+          <p class="mt-1 text-2xl font-bold tabular-nums text-emerald-900">
+            {{ stats.active_subscriptions }}
+          </p>
+          <p class="mt-0.5 text-xs text-gray-500">{{ stats.expiring_this_week }} ending ≤7d</p>
         </div>
         <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
-          <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Support open</p>
-          <p class="mt-1 text-2xl font-bold tabular-nums text-gray-900">{{ stats.open_support_tickets }}</p>
-          <p class="mt-0.5 text-xs text-gray-400">Phase 4</p>
+          <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Expired plans</p>
+          <p class="mt-1 text-2xl font-bold tabular-nums text-gray-900">
+            {{ stats.expired_subscriptions }}
+          </p>
+          <p class="mt-0.5 text-xs text-gray-400">{{ stats.total_companies }} workspaces</p>
         </div>
       </div>
 
       <UiCard class="mt-6">
-        <p class="text-sm font-semibold text-gray-900">Phase 1 complete</p>
+        <p class="text-sm font-semibold text-gray-900">Phase 3 live</p>
         <p class="mt-1 text-sm text-gray-600">
-          Admin access control is live. Next: manage user accounts (disable / edit / delete).
+          Manage plans and renewals under Subscriptions. Ending a plan never auto-locks a user.
         </p>
-        <ul class="mt-3 space-y-1 text-sm text-gray-500">
-          <li>· Accounts — Phase 2</li>
-          <li>· Subscriptions &amp; plans — Phase 3</li>
-          <li>· Support inbox — Phase 4</li>
-        </ul>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <NuxtLink to="/admin/subscriptions" class="ui-btn-primary py-2 text-xs">Subscriptions</NuxtLink>
+          <NuxtLink to="/admin/plans" class="ui-btn-secondary py-2 text-xs">Plans</NuxtLink>
+          <NuxtLink to="/admin/accounts" class="ui-btn-secondary py-2 text-xs">Accounts</NuxtLink>
+        </div>
       </UiCard>
     </template>
   </div>
@@ -51,6 +56,9 @@ type Dashboard = {
   disabled_users: number
   total_companies: number
   open_support_tickets: number
+  active_subscriptions: number
+  expired_subscriptions: number
+  expiring_this_week: number
 }
 
 const api = createApiClient()

@@ -26,7 +26,8 @@ export function createApiClient(): AxiosInstance {
       if (
         import.meta.client &&
         status === 403 &&
-        /disabled|subscription|plan ended|expired/i.test(detail)
+        /disabled/i.test(detail) &&
+        !/subscription|plan ended|expired/i.test(detail)
       ) {
         const path = window.location.pathname
         if (!path.startsWith('/subscription-ended') && !path.startsWith('/login')) {

@@ -1,7 +1,10 @@
 """App Admin API — Phase 1–2: access control + account management."""
 
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -15,7 +18,7 @@ from apps.accounts.account_admin import (
 from apps.accounts.audit import AdminAuditLog
 from apps.accounts.audit_services import write_admin_audit
 from apps.api.permissions import IsAppAdmin
-from apps.companies.models import Company
+from apps.companies.models import Company, Subscription, SubscriptionStatus
 
 User = get_user_model()
 
@@ -44,6 +47,11 @@ class AdminDashboardView(APIView):
 
     def get(self, request):
         users = User.objects.filter(is_superuser=False)
+        now = timezone.now()
+        week = now + timedelta(days=7)
+        active_subs = Subscription.objects.filter(
+            status__in=[SubscriptionStatus.TRIALING, SubscriptionStatus.ACTIVE]
+        )
         return Response(
             {
                 "total_users": users.count(),
@@ -51,10 +59,15 @@ class AdminDashboardView(APIView):
                 "disabled_users": users.filter(is_active=False).count(),
                 "total_companies": Company.objects.count(),
                 "open_support_tickets": 0,
-                "active_subscriptions": 0,
-                "expired_subscriptions": 0,
-                "phase": "2",
-                "note": "Subscriptions and support land in later phases.",
+                "active_subscriptions": active_subs.count(),
+                "expired_subscriptions": Subscription.objects.filter(
+                    status=SubscriptionStatus.EXPIRED
+                ).count(),
+                "expiring_this_week": active_subs.filter(
+                    ends_at__gte=now, ends_at__lte=week
+                ).count(),
+                "phase": "3",
+                "note": "Plan expiry shows alerts only; disable accounts manually.",
             }
         )
 

@@ -38,12 +38,16 @@ class RegisterSerializer(serializers.Serializer):
         company = Company.objects.create(
             name=validated_data["company_name"],
             owner=user,
+            subscription_plan="trial",
         )
         CompanyMembership.objects.create(
             user=user,
             company=company,
             role=CompanyRole.OWNER,
         )
+        from apps.companies.subscription_services import start_trial_for_company
+
+        start_trial_for_company(company)
         return user
 
 

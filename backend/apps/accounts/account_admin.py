@@ -5,7 +5,8 @@ from __future__ import annotations
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
-from apps.companies.models import Company, CompanyMembership
+from apps.companies.models import Company, CompanyMembership, Subscription
+from apps.companies.subscription_services import serialize_subscription
 from apps.labour.models import Labour
 from apps.materials.models import Material
 from apps.sites.models import Site
@@ -61,6 +62,22 @@ def serialize_account(user) -> dict:
         counts = {"companies": 0, "sites": 0, "workers": 0, "materials": 0}
 
     status = "active" if user.is_active else "disabled"
+    sub_payload = None
+    company_obj = None
+    if membership:
+        company_obj = membership.company
+    elif user.owned_companies.exists():
+        company_obj = user.owned_companies.order_by("created_at").first()
+    if company_obj is not None:
+        try:
+            sub_payload = serialize_subscription(
+                Subscription.objects.select_related(
+                    "plan", "company", "company__owner"
+                ).get(company=company_obj)
+            )
+        except Exception:
+            sub_payload = None
+
     return {
         "id": str(user.id),
         "email": user.email,
@@ -73,7 +90,11 @@ def serialize_account(user) -> dict:
         "last_login": user.last_login.isoformat() if user.last_login else None,
         "company": company,
         "counts": counts,
-        "subscription_plan": company["subscription_plan"] if company else "none",
+        "subscription_plan": (
+            (sub_payload or {}).get("plan", {}).get("key")
+            or (company["subscription_plan"] if company else "none")
+        ),
+        "subscription": sub_payload,
     }
 
 

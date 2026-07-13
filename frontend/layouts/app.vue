@@ -72,6 +72,28 @@
       </header>
 
       <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-5 lg:px-7 lg:py-7">
+        <div
+          v-if="showSubBanner && subInfo"
+          class="mb-4 rounded-xl border px-4 py-3 text-sm"
+          :class="
+            subInfo.is_expired
+              ? 'border-amber-200 bg-amber-50 text-amber-950'
+              : 'border-violet-200 bg-violet-50 text-violet-950'
+          "
+        >
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <p>
+              <span class="font-semibold">
+                {{ subInfo.is_expired ? 'Plan ended' : 'Plan ending soon' }}
+              </span>
+              — {{ subInfo.message || `${subInfo.days_remaining} day(s) left.` }}
+              You can keep using the app.
+            </p>
+            <NuxtLink to="/subscription" class="shrink-0 text-xs font-bold underline">
+              View plan
+            </NuxtLink>
+          </div>
+        </div>
         <slot />
       </main>
 
@@ -110,8 +132,18 @@
 const { items, bottomNavClass, isActive } = useAppNav()
 const { showDownloadPopup, canNativeInstall, install, openModal, bannerVisible, modalOpen } =
   usePwaInstall()
+const { info: subInfo, showBanner: showSubBanner, refresh: refreshSub } = useSubscriptionBanner()
 const auth = useAuthStore()
 const router = useRouter()
+
+onMounted(() => {
+  refreshSub()
+})
+
+watch(
+  () => auth.accessToken,
+  () => refreshSub(),
+)
 
 /** Extra bottom space so content clears nav + optional Download banner */
 const mainPadClass = computed(() => {

@@ -180,7 +180,8 @@ LabourPro is a **single PWA** for both Users and the App Admin. There is **no se
 /admin
 ├── Dashboard          KPIs: users, companies, active/expired subs, open tickets
 ├── Accounts           List → Detail (edit, disable/enable, delete)
-├── Subscriptions      List ending-soon / expired; Renew / Disable / set dates
+├── Subscriptions      List ending-soon / expired; Renew / Cancel / set dates
+                        (Cancel marks plan only — use Accounts to disable login)
 ├── Plans              CRUD for trial / monthly / yearly
 ├── Support            Inbox → Ticket thread + company/sub sidebar
 └── Audit (optional)   Recent Admin actions
@@ -201,11 +202,12 @@ Existing app (unchanged core)
 New User pages
 ├── Subscription       Plan name, status, end date, days left, renew guidance
 ├── Support            Ticket list → New ticket → Thread
-└── (Gate)             Full-page when subscription expired / account disabled
+└── (Gate)             Full-page only when Admin has **disabled** the account
 ```
 
-- Soft banner when < 7 days remaining.
-- Expired → block mutating work (or full redirect to subscription-ended page — enforce in Phase 3).
+- Soft banner when < 7 days remaining; stronger alert when plan is expired.
+- **Expired subscription does NOT auto-disable or lock the account.** App keeps working; User only sees alerts / renew messaging.
+- To cut off access, Admin uses **Accounts → Disable** manually.
 - Support + Subscription entries in app nav / settings area (exact placement in Phase 4/6).
 
 
@@ -333,60 +335,65 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ## Phase 3 — Subscriptions & billing lifecycle
 
+> **Status: COMPLETE** (v1 manual renew). Enforcement: alerts only — never auto-disable.
+>
+> **Enforcement rule (locked):** plan expiry = **alerts only**. Never auto-disable login or block APIs.
+> Cutting off a customer is always **Accounts → Disable** by Admin.
+
 
 
 ### Data model
 
-- [ ] `Plan` model: name, price, currency, duration_days, features JSON (optional)
-- [ ] `Subscription` model (per company): plan, status (`trialing` | `active` | `past_due` | `expired` | `cancelled`), `starts_at`, `ends_at`, `renewed_at`, notes
-- [ ] Seed default plans (e.g. Monthly)
-- [ ] On new company registration: auto-create trial or default subscription
-- [ ] Migration for existing companies: assign trial/active plan with an end date
+- [x] `Plan` model: name, price, currency, duration_days, features JSON (optional)
+- [x] `Subscription` model (per company): plan, status (`trialing` | `active` | `past_due` | `expired` | `cancelled`), `starts_at`, `ends_at`, `renewed_at`, notes
+- [x] Seed default plans (trial / monthly / yearly)
+- [x] On new company registration: auto-create trial subscription
+- [x] Migration for existing companies: assign plan with an end date
 
 
 
 ### Admin APIs
 
-- [ ] `GET /api/admin/plans/` / `POST` / `PATCH` — manage plans
-- [ ] `GET /api/admin/subscriptions/` — list by status / ending soon
-- [ ] `POST /api/admin/subscriptions/:id/renew/` — extend `ends_at` by plan duration
-- [ ] `POST /api/admin/subscriptions/:id/disable/` — set cancelled/expired, block access
-- [ ] `POST /api/admin/subscriptions/:id/set-dates/` — manual start/end override
-- [ ] Filter: subscriptions ending in N days
+- [x] `GET /api/admin/plans/` / `POST` / `PATCH` — manage plans
+- [x] `GET /api/admin/subscriptions/` — list by status / ending soon
+- [x] `POST /api/admin/subscriptions/:id/renew/` — extend `ends_at` by plan duration
+- [x] `POST /api/admin/subscriptions/:id/cancel/` — mark cancelled (does **not** disable login)
+- [x] `POST /api/admin/subscriptions/:id/set-dates/` — manual start/end override
+- [x] Filter: subscriptions ending in N days
 
 
 
 ### User APIs
 
-- [ ] `GET /api/subscription/me/` — current plan, end date, days remaining, status
-- [ ] `GET /api/subscription/plans/` — plan list (for “pay / renew” info)
-- [ ] Optional v1: `POST /api/subscription/renew-request/` — asks Admin to renew (no payment gateway yet)
+- [x] `GET /api/subscription/me/` — current plan, end date, days remaining, status
+- [x] `GET /api/subscription/plans/` — plan list (for “pay / renew” info)
+- [ ] Optional v1: `POST /api/subscription/renew-request/` — deferred (support tickets in Phase 4)
 
 
 
 ### Admin UI
 
-- [ ] Plans CRUD page
-- [ ] Subscriptions list: ending soon, expired, active
-- [ ] Per-company: Renew, Disable, Change plan, Edit end date
-- [ ] Dashboard widgets: active subs, expiring this week, expired count
+- [x] Plans CRUD page
+- [x] Subscriptions list: ending soon, expired, active
+- [x] Per-company: Renew, Cancel, Change plan, Edit end date
+- [x] Dashboard widgets: active subs, expiring this week, expired count
 
 
 
 ### User UI
 
-- [ ] **Subscription** page: plan name, status, **end date**, days left, progress/reminder
-- [ ] Expired / disabled full-page: “Your plan ended — contact support or renew”
-- [ ] Soft banners in app when < 7 days remaining
-- [ ] Nav entry: Subscription (and Support)
+- [x] **Subscription** page: plan name, status, **end date**, days left, renew guidance
+- [x] Soft banners when < 7 days remaining; expired alert (app still usable)
+- [x] `/subscription-ended` only for **disabled accounts** (not plan expiry)
+- [x] Nav entry: Subscription
 
 
 
 ### Enforcement
 
-- [ ] Cron / management command: mark expired subscriptions nightly
-- [ ] API middleware: reject mutating requests when expired (optional read-only)
-- [ ] Frontend middleware: redirect to subscription-ended page when expired
+- [x] Cron / management command: `mark_expired_subscriptions` (status only)
+- [x] ~~API block when expired~~ — **won’t do** (alerts only)
+- [x] ~~Frontend hard gate when expired~~ — **won’t do** (alerts only)
 
 
 
@@ -396,6 +403,21 @@ Bootstrap Admin: `python manage.py createsuperuser`
 - [ ] PaymentIntent / checkout session OR “mark paid” Admin workflow
 - [ ] Payment history table linked to subscription renewals
 - [ ] Receipts / invoice PDF (optional)
+
+### Phase 3 API surface
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET/POST | `/api/admin/plans/` | List / create plans |
+| PATCH | `/api/admin/plans/:id/` | Update plan |
+| GET | `/api/admin/subscriptions/` | List / filter subscriptions |
+| GET | `/api/admin/subscriptions/:id/` | Detail |
+| POST | `/api/admin/subscriptions/:id/renew/` | Extend end date |
+| POST | `/api/admin/subscriptions/:id/cancel/` | Mark cancelled (login unchanged) |
+| POST | `/api/admin/subscriptions/:id/set-dates/` | Override dates |
+| POST | `/api/admin/subscriptions/:id/change-plan/` | Switch plan |
+| GET | `/api/subscription/me/` | User plan status |
+| GET | `/api/subscription/plans/` | Public plan catalog |
 
 ---
 
@@ -539,7 +561,7 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ### Milestone B — Subscriptions
 
-- [ ] Phase 3 core (models, Admin renew/disable, User end-date page, enforcement)
+- [x] Phase 3 core (models, Admin renew/cancel, User alerts, no auto-disable)
 
 
 
@@ -586,7 +608,7 @@ Bootstrap Admin: `python manage.py createsuperuser`
 | Decisions       | **Done** (Phase 0 locked) |
 | Roles / access  | **Done** (Phase 1)        |
 | Account admin   | **Done** (Phase 2)        |
-| Subscriptions   | Not started               |
+| Subscriptions   | **Done** (Phase 3 — alerts only) |
 | Support         | Not started               |
 | Admin dashboard | Not started               |
 | Launch / QA     | Not started               |
@@ -608,4 +630,5 @@ Update this table as milestones complete.
 6. Subscriptions are **per company**; Admin renews manually in v1.
 7. Support is **in-app tickets** only in v1.
 8. Support tickets should show company + subscription context on the Admin side.
+9. **Expired plan ≠ disabled account.** Expiry shows banners/alerts only; Admin disables login manually via Accounts when needed.
 
