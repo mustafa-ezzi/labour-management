@@ -13,7 +13,13 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const auth = pinia ? useAuthStore(pinia) : useAuthStore()
 
   if (!stored && !auth.accessToken) {
-    return navigateTo(`/login?next=${encodeURIComponent(to.fullPath)}&admin=1`)
+    return navigateTo(
+      {
+        path: '/login',
+        query: { next: to.fullPath, admin: '1' },
+      },
+      { replace: true, external: false },
+    )
   }
 
   if (!auth.accessToken && stored) {
@@ -30,6 +36,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   } catch {
     auth.clear()
-    return navigateTo(`/login?next=${encodeURIComponent(to.fullPath)}&admin=1`)
+    return navigateTo(
+      {
+        path: '/login',
+        query: { next: to.fullPath, admin: '1' },
+      },
+      { replace: true, external: false },
+    )
   }
 })

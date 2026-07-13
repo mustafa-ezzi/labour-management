@@ -64,7 +64,11 @@
 <script setup lang="ts">
 import { hasStoredAuth } from '~/utils/auth-storage'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({
+  layout: 'default',
+  /** Never inherit Admin middleware / layout from a previous /admin visit */
+  middleware: [],
+})
 
 const route = useRoute()
 const email = ref('')

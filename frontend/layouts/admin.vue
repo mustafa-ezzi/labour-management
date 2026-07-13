@@ -1,5 +1,9 @@
 <template>
-  <div class="min-h-dvh bg-[#f7f5fc] text-gray-900 lg:flex">
+  <!-- Safety: never paint Admin chrome on non-/admin routes (layout stickiness). -->
+  <div v-if="!isAdminRoute">
+    <slot />
+  </div>
+  <div v-else class="min-h-dvh bg-[#f7f5fc] text-gray-900 lg:flex">
     <aside class="hidden w-56 shrink-0 flex-col border-r border-[#e9e4f5] bg-white lg:flex">
       <div class="border-b border-[#e9e4f5] px-5 py-5">
         <p class="text-[10px] font-semibold uppercase tracking-widest text-violet-600">LabourPro</p>
@@ -82,6 +86,8 @@ const route = useRoute()
 const auth = useAuthStore()
 const router = useRouter()
 const api = createApiClient()
+
+const isAdminRoute = computed(() => route.path === '/admin' || route.path.startsWith('/admin/'))
 
 const adminEmail = ref('')
 
