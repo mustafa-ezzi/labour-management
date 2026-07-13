@@ -3,6 +3,7 @@
   <NuxtLayout :key="layoutKey">
     <NuxtPage />
     <PwaInstallPrompt />
+    <OnboardingTour />
   </NuxtLayout>
 </template>
 

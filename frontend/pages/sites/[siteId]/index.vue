@@ -6,7 +6,7 @@
       <p v-if="siteMeta" class="text-xs text-gray-500">{{ siteMeta }}</p>
 
       <!-- Summary stats -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-2 gap-3" data-tour="site-stats">
         <div class="rounded-xl border border-violet-200 bg-violet-50 px-3 py-3">
           <p class="text-[10px] font-semibold uppercase tracking-wide text-violet-600">Workers</p>
           <p class="mt-0.5 text-xl font-bold tabular-nums text-violet-900">{{ workerCount }}</p>
@@ -37,6 +37,7 @@
       <div class="grid grid-cols-2 gap-4">
         <NuxtLink
           :to="`/sites/${siteId}/crew`"
+          data-tour="site-workers-tile"
           class="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white py-5 transition-colors hover:border-violet-200 hover:bg-violet-50/50"
         >
           <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
@@ -46,6 +47,7 @@
         </NuxtLink>
         <NuxtLink
           :to="`/sites/${siteId}/materials`"
+          data-tour="site-materials-tile"
           class="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white py-5 transition-colors hover:border-violet-200 hover:bg-violet-50/50"
         >
           <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
@@ -58,6 +60,7 @@
       <div class="grid grid-cols-2 gap-4">
         <NuxtLink
           :to="`/sites/${siteId}/crew/wages`"
+          data-tour="site-wages-tile"
           class="flex flex-col items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 py-5 transition-colors hover:border-violet-300 hover:bg-violet-100/60"
         >
           <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-md shadow-violet-700/25">
@@ -68,6 +71,7 @@
         </NuxtLink>
         <NuxtLink
           :to="`/sites/${siteId}/materials/usage`"
+          data-tour="site-logusage-tile"
           class="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white py-5 transition-colors hover:border-violet-200 hover:bg-violet-50/50"
         >
           <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
@@ -82,6 +86,7 @@
       <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
         <NuxtLink
           :to="`/sites/${siteId}/crew/history`"
+          data-tour="site-history-link"
           class="flex items-center gap-3 border-b border-gray-100 px-4 py-3 transition-colors hover:bg-violet-50/40"
         >
           <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-700">
@@ -95,6 +100,7 @@
         </NuxtLink>
         <NuxtLink
           :to="`/sites/${siteId}/materials/pay`"
+          data-tour="site-pay-link"
           class="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-violet-50/40"
         >
           <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
@@ -114,6 +120,8 @@
 </template>
 
 <script setup lang="ts">
+import { buildSiteTourSteps } from '~/utils/tourSteps'
+
 type Site = {
   id: string
   name: string
@@ -139,6 +147,10 @@ const api = createApiClient()
 const site = ref<Site | null>(null)
 const pending = ref(true)
 const error = ref('')
+
+const tour = useOnboardingTour()
+const { isSiteTourDone, markSiteTourDone } = useOnboardingFlags()
+const { modalOpen } = usePwaInstall()
 
 const workerCount = ref(0)
 const activeWorkerCount = ref(0)
@@ -199,6 +211,24 @@ onMounted(async () => {
 
     const wageRows = wagesRes?.data?.results ?? []
     presentToday.value = wageRows.filter((r) => parseAmount(r.wage_today) > 0).length
+
+    if (!isSiteTourDone() && !tour.active.value) {
+      const beginSiteTour = () => {
+        window.setTimeout(() => {
+          tour.start(buildSiteTourSteps(), { onFinish: markSiteTourDone })
+        }, 500)
+      }
+      if (modalOpen.value) {
+        const stop = watch(modalOpen, (open) => {
+          if (!open) {
+            stop()
+            beginSiteTour()
+          }
+        })
+      } else {
+        beginSiteTour()
+      }
+    }
   } catch {
     error.value = 'Site not found.'
   } finally {

@@ -7,6 +7,8 @@ export type NavItem = {
   match: 'exact' | 'prefix'
   /** Optional extra prefix (e.g. /sites/:id) used only for the All sites entry */
   prefix?: string
+  /** data-tour hook used by the guided onboarding tour to spotlight this nav entry */
+  tourId?: string
 }
 
 export function useAppNav() {
@@ -25,14 +27,15 @@ export function useAppNav() {
     }
 
     return [
-      { to: '/dashboard', label: 'Dashboard', shortLabel: 'Home', icon: 'home', match: 'exact' },
-      { to: '/sites', label: 'Sites', shortLabel: 'Sites', icon: 'site', match: 'prefix', prefix: '/sites' },
+      { to: '/dashboard', label: 'Dashboard', shortLabel: 'Home', icon: 'home', match: 'exact', tourId: 'nav-dashboard' },
+      { to: '/sites', label: 'Sites', shortLabel: 'Sites', icon: 'site', match: 'prefix', prefix: '/sites', tourId: 'nav-sites' },
       {
         to: '/subscription',
         label: 'Subscription',
         shortLabel: 'Plan',
         icon: 'pay',
         match: 'exact',
+        tourId: 'nav-subscription',
       },
       {
         to: '/support',
@@ -41,6 +44,7 @@ export function useAppNav() {
         icon: 'attendance',
         match: 'prefix',
         prefix: '/support',
+        tourId: 'nav-support',
       },
     ]
   })

@@ -77,6 +77,7 @@ async function submit() {
       password: password.value,
     })
     auth.setTokens(data.access, data.refresh)
+    useOnboardingFlags().markNeedsMainTour()
     await router.push('/dashboard')
   } catch (e: unknown) {
     const err = e as { response?: { data?: Record<string, unknown> } }

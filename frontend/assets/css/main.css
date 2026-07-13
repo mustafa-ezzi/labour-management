@@ -60,6 +60,11 @@
        overflow:hidden here was sticking and locking the whole app. */
     overscroll-behavior: none;
   }
+
+  /* Guided tour: lock scroll so the spotlighted element doesn't drift under the overlay. */
+  body.tour-open {
+    overflow: hidden;
+  }
 }
 
 @layer components {

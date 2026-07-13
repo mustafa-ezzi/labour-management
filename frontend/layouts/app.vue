@@ -12,6 +12,7 @@
           v-for="item in items"
           :key="item.to"
           :to="item.to"
+          :data-tour="item.tourId"
           class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150"
           :class="
             isActive(item)
@@ -107,6 +108,7 @@
             v-for="item in items"
             :key="item.to"
             :to="item.to"
+            :data-tour="item.tourId"
             class="flex flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-[10px] font-semibold uppercase tracking-wide transition-all"
             :class="
               isActive(item)
@@ -125,16 +127,52 @@
         </div>
       </nav>
     </div>
+
+    <!-- Replay the guided tour anytime -->
+    <button
+      v-if="!tourActive && !modalOpen"
+      type="button"
+      class="fixed right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-violet-700 text-white shadow-lg shadow-violet-900/30 transition-transform hover:scale-105 active:scale-95 lg:bottom-6"
+      :class="showPwaBanner ? 'bottom-[9.5rem]' : 'bottom-[5.5rem]'"
+      aria-label="Replay app tour"
+      @click="replayTour"
+    >
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3s-1.79 3-4 3m0 3h.01M12 21a9 9 0 100-18 9 9 0 000 18z"
+        />
+      </svg>
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { buildMainTourSteps } from '~/utils/tourSteps'
+
 const { items, bottomNavClass, isActive } = useAppNav()
 const { showDownloadPopup, canNativeInstall, install, openModal, bannerVisible, modalOpen } =
   usePwaInstall()
 const { info: subInfo, showBanner: showSubBanner, refresh: refreshSub } = useSubscriptionBanner()
 const auth = useAuthStore()
 const router = useRouter()
+const route = useRoute()
+
+const { active: tourActive, start: startTour } = useOnboardingTour()
+const { markMainTourDone } = useOnboardingFlags()
+
+const showPwaBanner = computed(
+  () => bannerVisible.value && showDownloadPopup.value && !modalOpen.value,
+)
+
+async function replayTour() {
+  if (route.path !== '/dashboard') {
+    await router.push('/dashboard')
+    await nextTick()
+  }
+  await startTour(buildMainTourSteps(), { onFinish: markMainTourDone })
+}
 
 onMounted(() => {
   refreshSub()

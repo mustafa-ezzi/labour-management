@@ -2,7 +2,7 @@
   <div>
     <UiPageHeader title="Sites" subtitle="Construction projects and locations">
       <template #action>
-        <NuxtLink to="/sites/new" class="ui-btn-primary">Add site</NuxtLink>
+        <NuxtLink to="/sites/new" data-tour="sites-add-btn" class="ui-btn-primary">Add site</NuxtLink>
       </template>
     </UiPageHeader>
 
