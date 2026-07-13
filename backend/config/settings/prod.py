@@ -43,27 +43,42 @@ frontend_url = os.environ.get("FRONTEND_URL", "").strip().strip('"').strip("'")
 if frontend_url:
     cors_origins.append(_normalize_origin(frontend_url))
 
+# Known production SPA (LabourPro on Railway) — keep even if env vars drift.
+_KNOWN_FRONTENDS = (
+    "https://labour-management.up.railway.app",
+)
+for _known in _KNOWN_FRONTENDS:
+    cors_origins.append(_known)
+
 CORS_ALLOWED_ORIGINS = list(dict.fromkeys(_normalize_origin(o) for o in cors_origins if o))
 
 # Allow Railway frontends + optional local Nuxt when pointing at prod API
 CORS_ALLOWED_ORIGIN_REGEXES = [
     re.compile(r"^https://[a-z0-9-]+\.up\.railway\.app$"),
 ]
+# Extra regexes from env (comma-separated patterns), e.g. ^https://app\.example\.com$
+for _pat in _split_env_list(os.environ.get("CORS_ORIGIN_REGEXES", "")):
+    try:
+        CORS_ALLOWED_ORIGIN_REGEXES.append(re.compile(_pat))
+    except re.error:
+        pass
+
 if os.environ.get("CORS_ALLOW_LOCALHOST", "1") != "0":
     CORS_ALLOWED_ORIGIN_REGEXES.extend(
         [
             re.compile(r"^http://localhost:\d+$"),
             re.compile(r"^http://127\.0\.0\.1:\d+$"),
+            re.compile(r"^https://localhost:\d+$"),
+            re.compile(r"^https://127\.0\.0\.1:\d+$"),
         ]
     )
 
-if not CORS_ALLOWED_ORIGINS and not os.environ.get("CORS_ALLOW_RAILWAY_REGEX", "1") == "0":
-    # Regex above covers Railway; explicit list still preferred for non-Railway frontends
-    pass
-
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS.copy()
-# Regex origins aren't auto-added to CSRF; include FRONTEND_URL + common local SPA ports.
-for _local in ("http://localhost:3000", "http://127.0.0.1:3000"):
+for _local in (
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://labour-management.up.railway.app",
+):
     if _local not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(_local)
 
@@ -79,3 +94,5 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+CORS_ALLOW_METHODS = ["DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT", "HEAD"]
+
