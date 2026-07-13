@@ -32,8 +32,9 @@
       </div>
     </aside>
 
-    <div class="flex min-h-dvh min-w-0 flex-1 flex-col">
-      <header class="border-b border-[#e9e4f5] bg-white px-4 py-3 lg:px-7">
+    <!-- min-h-dvh only on outer; inner grows with content so the page can scroll on mobile -->
+    <div class="flex min-w-0 flex-1 flex-col">
+      <header class="sticky top-0 z-20 border-b border-[#e9e4f5] bg-white/95 px-4 py-3 backdrop-blur-md lg:px-7">
         <div class="flex items-center justify-between gap-3">
           <div>
             <p class="text-[10px] font-semibold uppercase tracking-widest text-violet-600 lg:hidden">
@@ -49,7 +50,7 @@
             Sign out
           </button>
         </div>
-        <nav class="mt-3 flex gap-1 overflow-x-auto lg:hidden">
+        <nav class="mt-3 flex gap-1 overflow-x-auto overscroll-x-contain lg:hidden">
           <NuxtLink
             v-for="item in nav"
             :key="item.to"
@@ -66,7 +67,10 @@
         </nav>
       </header>
 
-      <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-5 lg:px-7 lg:py-7">
+      <main
+        class="mx-auto w-full max-w-6xl flex-1 px-4 py-5 lg:px-7 lg:py-7"
+        style="padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px))"
+      >
         <slot />
       </main>
     </div>

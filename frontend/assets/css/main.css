@@ -31,8 +31,32 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Mobile / PWA: never lock the document — allow vertical scroll */
+  html {
+    height: auto;
+    min-height: 100%;
+    overflow-x: clip;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   body {
     @apply bg-[#f7f5fc] text-gray-900;
+    height: auto;
+    min-height: 100%;
+    overflow-x: clip;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+
+  #__nuxt {
+    min-height: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  body.pwa-modal-open {
+    overflow: hidden;
   }
 }
 
@@ -110,6 +134,7 @@
   /* ── Layout helpers ──────────────────────────────────────── */
   .ui-app-bg {
     @apply min-h-dvh bg-[#f7f5fc] text-gray-900;
+    overflow: visible;
   }
 
   .ui-header-bar {

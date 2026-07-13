@@ -39,7 +39,7 @@
       </div>
     </aside>
 
-    <div class="relative z-10 flex min-h-dvh min-w-0 flex-1 flex-col pb-[4.5rem] lg:pb-0">
+    <div class="relative z-10 flex min-h-dvh min-w-0 flex-1 flex-col lg:pb-0" :class="mainPadClass">
       <header class="ui-header-bar">
         <div class="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 lg:px-7 lg:py-3.5">
           <div class="flex items-center gap-2.5 lg:hidden">
@@ -108,9 +108,18 @@
 
 <script setup lang="ts">
 const { items, bottomNavClass, isActive } = useAppNav()
-const { showDownloadPopup, canNativeInstall, install, openModal } = usePwaInstall()
+const { showDownloadPopup, canNativeInstall, install, openModal, bannerVisible, modalOpen } =
+  usePwaInstall()
 const auth = useAuthStore()
 const router = useRouter()
+
+/** Extra bottom space so content clears nav + optional Download banner */
+const mainPadClass = computed(() => {
+  if (bannerVisible.value && showDownloadPopup.value && !modalOpen.value) {
+    return 'pb-[9.5rem]'
+  }
+  return 'pb-[4.5rem]'
+})
 
 function triggerInstall() {
   if (canNativeInstall.value) {

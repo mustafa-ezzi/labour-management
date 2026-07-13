@@ -33,14 +33,15 @@
 
     <div
       v-if="modalOpen && showDownloadPopup"
-      class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      class="fixed inset-0 z-[100] flex items-end justify-center overflow-y-auto bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="pwa-download-title"
       @click.self="closeModal"
     >
-      <div class="relative w-full max-w-sm overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl">
-        <button
+      <div
+        class="relative mt-auto max-h-[90dvh] w-full max-w-sm overflow-y-auto overscroll-contain rounded-t-3xl bg-white shadow-2xl sm:mt-0 sm:rounded-2xl"
+      >        <button
           type="button"
           class="absolute right-3 top-3 z-10 rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
           aria-label="Close"
@@ -172,6 +173,19 @@ const {
 } = usePwaInstall()
 
 const installError = ref('')
+
+watch(
+  modalOpen,
+  (open) => {
+    if (!import.meta.client) return
+    document.body.classList.toggle('pwa-modal-open', Boolean(open && showDownloadPopup.value))
+  },
+  { immediate: true },
+)
+
+onUnmounted(() => {
+  if (import.meta.client) document.body.classList.remove('pwa-modal-open')
+})
 
 function installNow() {
   installError.value = ''

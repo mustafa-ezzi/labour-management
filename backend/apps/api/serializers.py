@@ -72,7 +72,9 @@ class LabourTokenObtainPairSerializer(TokenObtainPairSerializer):
                     "This account has been disabled. Contact LabourPro support.",
                     code="user_disabled",
                 )
-        return super().validate(attrs)
+        data = super().validate(attrs)
+        data["is_app_admin"] = bool(self.user.is_superuser and self.user.is_active)
+        return data
 
 
 class SiteSerializer(serializers.ModelSerializer):

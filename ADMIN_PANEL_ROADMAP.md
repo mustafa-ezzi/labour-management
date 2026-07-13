@@ -22,6 +22,42 @@ There are only **two kinds of people** in the system:
 
 ---
 
+## PWA + Admin on mobile (how you log in)
+
+LabourPro is a **single PWA** for both Users and the App Admin. There is **no separate Admin app** to install.
+
+### Same app, different account
+
+| Who | What they install | What they sign in with | Where they land |
+|-----|-------------------|------------------------|-----------------|
+| **User** | LabourPro PWA (Add to Home Screen) | Their normal email/password | `/dashboard` → sites / crew / wages |
+| **Admin** | **Same** LabourPro PWA (or Chrome/Safari on the phone) | App Admin email/password (`createsuperuser`) | `/admin` (Admin panel) |
+
+### Step-by-step (Admin on phone)
+
+1. Open the LabourPro URL in **Chrome** (Android) or **Safari** (iPhone), or open the installed **LabourPro** home-screen icon.
+2. If you were signed in as a normal User, **Sign out** first.
+3. On the **Sign in** screen, enter the **App Admin** email + password (the `createsuperuser` account).
+4. After login, the app detects `is_app_admin` and sends you to **`/admin`** (Dashboard, Accounts, Subscriptions, Plans, Support, Audit).
+5. You manage the whole app from that Admin UI on the phone — same features as desktop, mobile layout already has a top tab strip.
+
+### Important rules
+
+- **Do not use your personal User account** for Admin work — Admin is only the superuser account.
+- Normal Users **never** see Admin nav; if they open `/admin` they are redirected away.
+- You can keep one PWA icon; switching User ↔ Admin = sign out → sign in with the other account.
+- Optional later: bookmark `/admin` or add a second home-screen shortcut titled “LabourPro Admin” pointing at `https://your-app/admin` (still the same PWA).
+- Prefer **Chrome/Edge** on Android for PWA install; on iPhone use Safari → Share → Add to Home Screen.
+
+### Checklist (document / polish)
+
+- [x] Same PWA hosts User app + `/admin` (no second install package)
+- [x] Admin login on mobile uses the normal Sign in screen → auto-redirect to `/admin`
+- [ ] Phase 6 polish: make Admin tables/forms comfortable on small screens (horizontal scroll / stacked rows)
+- [ ] Optional: “Open Admin” hint only when `is_app_admin` (never shown to Users)
+
+---
+
 ## How to use this file
 
 - Mark a task done: change `- [ ]` → `- [x]`
@@ -105,8 +141,9 @@ There are only **two kinds of people** in the system:
 └── Audit (optional)   Recent Admin actions
 ```
 
-- Desktop-first Admin UI is OK for v1; mobile-usable tables preferred if cheap.
+- Desktop-first Admin UI is OK for v1; **must still work on mobile PWA** (Admin logs in on phone — see “PWA + Admin on mobile” above).
 - Admin never uses the normal site/crew bottom nav as their primary home.
+- Same installed PWA; Admin vs User is only which account signs in.
 
 #### 9. User information architecture
 
@@ -163,7 +200,8 @@ New User pages
 | GET | `/api/admin/gate/` | Permission probe |
 
 JWT claim: `is_app_admin` (true for active superusers).  
-Bootstrap Admin: `python manage.py createsuperuser`
+Bootstrap Admin: `python manage.py createsuperuser`  
+**Mobile / PWA:** install LabourPro → Sign in with that Admin account → lands on `/admin` (see section above).
 
 ---
 
@@ -323,11 +361,12 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ## Phase 6 — Frontend architecture (Admin panel + User app)
 
-- [ ] Same Nuxt app with `/admin` routes for Admin only (Users never enter)
+- [x] Same Nuxt **PWA** with `/admin` routes for Admin only (Users never enter)
 - [ ] Admin design system: tables, filters, confirm dialogs, danger zones
-- [ ] Mobile-friendly admin lists (or desktop-first Admin OK — decide)
+- [ ] **Mobile-first Admin UX** — Admin operates from the phone PWA (not desktop-only)
 - [ ] User Subscription + Support pages match existing LabourPro purple/white theme
 - [ ] Empty states, skeletons, error banners
+- [ ] Optional: second home-screen shortcut to `/admin` documented for LabourPro staff
 - [ ] i18n not required for v1 unless needed
 
 ---
@@ -418,8 +457,9 @@ Update this table as milestones complete.
 
 1. **Admin** = LabourPro staff, sole controller of the whole app (`is_superuser`). **Users** = everyone else.
 2. Do not build company/site “admin” roles for the platform — out of scope.
-3. **Delete entire account** = delete the **company tenant** and all site/crew/attendance/material/payment data owned by that company, plus memberships and related user record(s) as implemented in Phase 2.
-4. **Disable** is reversible; **delete** is not. No soft-delete purge window in v1.
-5. Subscriptions are **per company**; Admin renews manually in v1.
-6. Support is **in-app tickets** only in v1.
-7. Support tickets should show company + subscription context on the Admin side.
+3. **PWA:** one install for everyone. Admin logs in on mobile with the Admin account and is routed to `/admin`; Users never see Admin UI.
+4. **Delete entire account** = delete the **company tenant** and all site/crew/attendance/material/payment data owned by that company, plus memberships and related user record(s) as implemented in Phase 2.
+5. **Disable** is reversible; **delete** is not. No soft-delete purge window in v1.
+6. Subscriptions are **per company**; Admin renews manually in v1.
+7. Support is **in-app tickets** only in v1.
+8. Support tickets should show company + subscription context on the Admin side.
