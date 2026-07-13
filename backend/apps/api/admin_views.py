@@ -1,10 +1,7 @@
 """App Admin API — Phase 1–2: access control + account management."""
 
-from datetime import timedelta
-
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -17,9 +14,9 @@ from apps.accounts.account_admin import (
 )
 from apps.accounts.audit import AdminAuditLog
 from apps.accounts.audit_services import write_admin_audit
+from apps.api.admin_dashboard import AdminDashboardView, AdminSensitiveThrottle
 from apps.api.permissions import IsAppAdmin
-from apps.companies.models import Company, Subscription, SubscriptionStatus
-from apps.support.services import open_ticket_count
+from apps.companies.models import Company
 
 User = get_user_model()
 
@@ -39,36 +36,6 @@ class AdminMeView(APIView):
                     "last_name": request.user.last_name,
                     "is_app_admin": True,
                 }
-            }
-        )
-
-
-class AdminDashboardView(APIView):
-    permission_classes = [IsAuthenticated, IsAppAdmin]
-
-    def get(self, request):
-        users = User.objects.filter(is_superuser=False)
-        now = timezone.now()
-        week = now + timedelta(days=7)
-        active_subs = Subscription.objects.filter(
-            status__in=[SubscriptionStatus.TRIALING, SubscriptionStatus.ACTIVE]
-        )
-        return Response(
-            {
-                "total_users": users.count(),
-                "active_users": users.filter(is_active=True).count(),
-                "disabled_users": users.filter(is_active=False).count(),
-                "total_companies": Company.objects.count(),
-                "open_support_tickets": open_ticket_count(),
-                "active_subscriptions": active_subs.count(),
-                "expired_subscriptions": Subscription.objects.filter(
-                    status=SubscriptionStatus.EXPIRED
-                ).count(),
-                "expiring_this_week": active_subs.filter(
-                    ends_at__gte=now, ends_at__lte=week
-                ).count(),
-                "phase": "4",
-                "note": "Support inbox live. Plan expiry is alerts-only.",
             }
         )
 
@@ -139,6 +106,11 @@ class AdminAccountListView(APIView):
 
 class AdminAccountDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAppAdmin]
+
+    def get_throttles(self):
+        if getattr(self, "request", None) is not None and self.request.method == "DELETE":
+            return [AdminSensitiveThrottle()]
+        return []
 
     def get(self, request, user_id):
         user = _get_customer_user(user_id)

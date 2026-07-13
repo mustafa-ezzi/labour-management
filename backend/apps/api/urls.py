@@ -13,6 +13,11 @@ from apps.api.admin_views import (
     AdminGateProbeView,
     AdminMeView,
 )
+from apps.api.admin_dashboard import (
+    AdminAccountsExportView,
+    AdminSearchView,
+    AdminSubscriptionsExportView,
+)
 from apps.api.support_admin_views import (
     AdminSupportTicketDetailView,
     AdminSupportTicketListView,
@@ -62,6 +67,13 @@ router.register("material-payments", MaterialPaymentViewSet, basename="material-
 admin_urlpatterns = [
     path("me/", AdminMeView.as_view(), name="admin-me"),
     path("dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
+    path("search/", AdminSearchView.as_view(), name="admin-search"),
+    path("exports/accounts/", AdminAccountsExportView.as_view(), name="admin-export-accounts"),
+    path(
+        "exports/subscriptions/",
+        AdminSubscriptionsExportView.as_view(),
+        name="admin-export-subscriptions",
+    ),
     path("audit/", AdminAuditListView.as_view(), name="admin-audit"),
     path("gate/", AdminGateProbeView.as_view(), name="admin-gate"),
     path("accounts/", AdminAccountListView.as_view(), name="admin-accounts"),

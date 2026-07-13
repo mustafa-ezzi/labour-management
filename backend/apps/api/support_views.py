@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.api.admin_dashboard import SupportCreateThrottle
 from apps.api.permissions import IsAuthenticatedCompanyMember
 from apps.companies.subscription_services import company_for_user
 from apps.support.models import SupportTicket, TicketStatus
@@ -19,6 +20,11 @@ from apps.support.services import (
 
 class SupportTicketListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAuthenticatedCompanyMember]
+
+    def get_throttles(self):
+        if getattr(self, "request", None) is not None and self.request.method == "POST":
+            return [SupportCreateThrottle()]
+        return []
 
     def get(self, request):
         company = company_for_user(request.user)

@@ -496,16 +496,29 @@ Bootstrap Admin: `python manage.py createsuperuser`
 
 ## Phase 5 — Admin dashboard & extra whole-app features
 
-- [ ] KPI cards: total companies, active users, active subs, MRR (if priced), open tickets
-- [ ] Charts: signups over time, expiring subscriptions
-- [ ] Recent audit log feed
-- [ ] Impersonate / “view as company” (read-only) — optional, high caution
-- [ ] Global search: company, user email, ticket id
-- [ ] Export CSV: accounts, subscriptions
-- [ ] Feature flags per company (optional)
-- [ ] Announcement banner for all Users (optional)
-- [ ] Rate limits on Admin delete / User support create
+> **Status: COMPLETE** (v1) — KPIs, charts, search, CSV export, light rate limits.
+> Skipped for v1: impersonate, feature flags, announcement banner.
 
+
+
+- [x] KPI cards: total companies, active users, active subs, estimated MRR, open tickets
+- [x] Charts: signups over time (30d bar chart), expiring subscriptions list
+- [x] Recent audit log feed (on dashboard + full Audit page)
+- [ ] Impersonate / “view as company” (read-only) — optional, deferred
+- [x] Global search: company, user email, ticket id
+- [x] Export CSV: accounts, subscriptions
+- [ ] Feature flags per company (optional) — deferred
+- [ ] Announcement banner for all Users (optional) — deferred
+- [x] Rate limits on Admin delete / User support create
+
+### Phase 5 API surface
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET | `/api/admin/dashboard/` | KPIs, signup series, expiring, audit, tickets |
+| GET | `/api/admin/search/?q=` | Global search |
+| GET | `/api/admin/exports/accounts/` | Accounts CSV |
+| GET | `/api/admin/exports/subscriptions/` | Subscriptions CSV |
 ---
 
 
@@ -586,7 +599,7 @@ Bootstrap Admin: `python manage.py createsuperuser`
 ### Milestone D — Hard delete + polish
 
 - [x] Full cascade delete (shipped with Phase 2)
-- [ ] Phase 5 dashboard KPIs
+- [x] Phase 5 dashboard KPIs
 - [ ] Phase 7 tests + production launch
 
 
@@ -622,7 +635,7 @@ Bootstrap Admin: `python manage.py createsuperuser`
 | Account admin   | **Done** (Phase 2)        |
 | Subscriptions   | **Done** (Phase 3 — alerts only) |
 | Support         | **Done** (Phase 4)        |
-| Admin dashboard | Not started               |
+| Admin dashboard | **Done** (Phase 5)        |
 | Launch / QA     | Not started               |
 
 
